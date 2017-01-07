@@ -2,13 +2,11 @@ package interact
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"strconv"
 	"time"
 	"bufio"
 	"os"
-	"github.com/fatih/color"
 )
 
 type Quest struct {
@@ -22,24 +20,36 @@ type Quest struct {
 }
 
 type Q struct {
-	Default  bool
-	Text,Value,Error,Response interface{}
+	Text,Err,Response interface{}
+	Default D
+}
+
+type D struct {
+	Text, Value interface{}
+}
+
+func (q *Quest) quest() *Interact{
+	i := Interact{}
+	i.Questions = append(i.Questions, q)
+	return &i
 }
 
 func (q *Quest) ask() (err error){
-	if q.parent != nil && q.parent.Prefix != nil{
-		fmt.Print(q.parent.Prefix," ")
+	if q.parent != nil && q.parent.W != nil{
+		fmt.Fprint(q.parent.W,q.parent.T," ")
+		fmt.Fprint(q.parent.W,q.Text,": ")
+	}else {
+		q.print(q.Text, ": ")
 	}
-	fmt.Print(q.Text,": ")
-	if q.Default{
-		fmt.Print(q.Value," ")
+	if q.Default.Value != nil{
+		fmt.Print(q.Default.Text," ")
 	}
 	if err = q.wait(); err != nil {
 		return err
 	}
 	if err = q.response(); err != nil {
-		if q.Error != nil {
-			fmt.Fprint(color.Output, q.Error," ")
+		if q.Err != nil {
+			fmt.Print(q.Err," ")
 		}
 		return q.ask()
 	}
@@ -122,6 +132,14 @@ func (q *Quest) response() error {
 	return err
 }
 
-func empty(x interface{}) bool {
-	return x == nil || x == reflect.Zero(reflect.TypeOf(x)).Interface()
+func (q *Quest)print(a ...interface{}){
+	if q.parent != nil && q.parent.W != nil {
+		fmt.Fprint(q.parent.W, a...)
+	}else if q.parent != nil && q.parent.W == nil {
+		fmt.Print(q.parent.T)
+		fmt.Print(a...)
+	}else{
+		fmt.Print(a...)
+	}
+
 }
