@@ -10,13 +10,13 @@ import (
 )
 
 type Quest struct {
+	*Q
+	SubQuest  []*Quest
+	Validate  ContextFunc 	// validate output
+	Filter    ContextFunc 	// quests conditions for sub questions
+
 	parent 	  *Interact
 	resp      string
-	SubQuest  []*Quest
-
-	*Q
-	Filter    func() 	// quests conditions
-	Validate  func() 	// validate output
 }
 
 type Q struct {
@@ -28,13 +28,18 @@ type D struct {
 	Text, Value interface{}
 }
 
+func (q *Quest) context() *Context{
+	i := Interact{}
+	return &Context{interact:&i}
+}
+
 func (q *Quest) quest() *Interact{
 	i := Interact{}
 	i.Questions = append(i.Questions, q)
 	return &i
 }
 
-func (q *Quest) ask() (err error){
+func (q *Quest) ask(c *Context) (err error){
 	if q.parent != nil && q.parent.W != nil{
 		fmt.Fprint(q.parent.W,q.parent.T," ")
 		fmt.Fprint(q.parent.W,q.Text,": ")
@@ -51,7 +56,11 @@ func (q *Quest) ask() (err error){
 		if q.Err != nil {
 			fmt.Print(q.Err," ")
 		}
-		return q.ask()
+		return q.ask(c)
+	}
+	if err := q.Validate(c); err != nil{
+		fmt.Print(err," ")
+		return q.ask(c)
 	}
 	return nil
 }
