@@ -1,65 +1,65 @@
 package interact
 
 import (
-	"fmt"
-	"strings"
-	"strconv"
-	"time"
 	"bufio"
+	"fmt"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type Quest struct {
 	*Q
-	SubQuest  []*Quest
-	Validate  ContextFunc 	// validate output
-	Filter    ContextFunc 	// quests conditions for sub questions
+	SubQuest []*Quest
+	Validate ContextFunc // validate output
+	Filter   ContextFunc // quests conditions for sub questions
 
-	parent 	  *Interact
-	resp      string
+	parent *Interact
+	resp   string
 }
 
 type Q struct {
-	Text,Err,Response interface{}
-	Default D
+	Text, Err, Response interface{}
+	Default             D
 }
 
 type D struct {
 	Text, Value interface{}
 }
 
-func (q *Quest) context() *Context{
+func (q *Quest) context() *Context {
 	i := Interact{}
-	return &Context{interact:&i}
+	return &Context{interact: &i}
 }
 
-func (q *Quest) quest() *Interact{
+func (q *Quest) quest() *Interact {
 	i := Interact{}
 	i.Questions = append(i.Questions, q)
 	return &i
 }
 
-func (q *Quest) ask(c *Context) (err error){
-	if q.parent != nil && q.parent.W != nil{
-		fmt.Fprint(q.parent.W,q.parent.T," ")
-		fmt.Fprint(q.parent.W,q.Text,": ")
-	}else {
+func (q *Quest) ask(c *Context) (err error) {
+	if q.parent != nil && q.parent.W != nil {
+		fmt.Fprint(q.parent.W, q.parent.T, " ")
+		fmt.Fprint(q.parent.W, q.Text, ": ")
+	} else {
 		q.print(q.Text, ": ")
 	}
-	if q.Default.Value != nil{
-		fmt.Print(q.Default.Text," ")
+	if q.Default.Value != nil {
+		fmt.Print(q.Default.Text, " ")
 	}
 	if err = q.wait(); err != nil {
 		return err
 	}
 	if err = q.response(); err != nil {
 		if q.Err != nil {
-			fmt.Print(q.Err," ")
+			fmt.Print(q.Err, " ")
 		}
 		return q.ask(c)
 	}
-	if err := q.Validate(c); err != nil{
-		fmt.Print(err," ")
+	if err := q.Validate(c); err != nil {
+		fmt.Print(err, " ")
 		return q.ask(c)
 	}
 	return nil
@@ -81,43 +81,43 @@ func (q *Quest) response() error {
 
 	switch q.Response.(type) {
 	case uint:
-		if v, err = strconv.ParseUint(q.resp, 10, 32); err == nil{
+		if v, err = strconv.ParseUint(q.resp, 10, 32); err == nil {
 			q.Response = uint(v.(uint64))
 		}
 	case uint8:
-		if v, err = strconv.ParseUint(q.resp, 10, 8); err == nil{
+		if v, err = strconv.ParseUint(q.resp, 10, 8); err == nil {
 			q.Response = uint8(v.(uint64))
 		}
 	case uint16:
-		if v, err = strconv.ParseUint(q.resp, 10, 16); err == nil{
+		if v, err = strconv.ParseUint(q.resp, 10, 16); err == nil {
 			q.Response = uint16(v.(uint64))
 		}
 	case uint32:
-		if v, err = strconv.ParseUint(q.resp, 10, 32); err == nil{
+		if v, err = strconv.ParseUint(q.resp, 10, 32); err == nil {
 			q.Response = uint32(v.(uint64))
 		}
 	case uint64:
 		q.Response, err = strconv.ParseUint(q.resp, 10, 64)
 	case int:
-		if v, err = strconv.ParseInt(q.resp, 10, 32); err == nil{
+		if v, err = strconv.ParseInt(q.resp, 10, 32); err == nil {
 			q.Response = int(v.(int64))
 		}
 	case int8:
-		if v, err = strconv.ParseInt(q.resp, 10, 8); err == nil{
+		if v, err = strconv.ParseInt(q.resp, 10, 8); err == nil {
 			q.Response = int8(v.(int64))
 		}
 	case int16:
-		if v, err = strconv.ParseInt(q.resp, 10, 16); err == nil{
+		if v, err = strconv.ParseInt(q.resp, 10, 16); err == nil {
 			q.Response = int16(v.(int64))
 		}
 	case int32:
-		if v, err = strconv.ParseInt(q.resp, 10, 32); err == nil{
+		if v, err = strconv.ParseInt(q.resp, 10, 32); err == nil {
 			q.Response = int32(v.(int64))
 		}
 	case int64:
 		q.Response, err = strconv.ParseInt(q.resp, 10, 64)
 	case float32:
-		if v, err = strconv.ParseFloat(q.resp, 64); err == nil{
+		if v, err = strconv.ParseFloat(q.resp, 64); err == nil {
 			q.Response = float32(v.(float64))
 		}
 	case float64:
@@ -131,7 +131,7 @@ func (q *Quest) response() error {
 			q.Response, err = strconv.ParseBool(q.resp)
 		}
 	case time.Duration:
-		if v, err = strconv.ParseUint(q.resp, 10, 64); err == nil{
+		if v, err = strconv.ParseUint(q.resp, 10, 64); err == nil {
 			q.Response = time.Duration(v.(uint64)) * time.Second
 		}
 	case string:
@@ -141,13 +141,13 @@ func (q *Quest) response() error {
 	return err
 }
 
-func (q *Quest)print(a ...interface{}){
+func (q *Quest) print(a ...interface{}) {
 	if q.parent != nil && q.parent.W != nil {
 		fmt.Fprint(q.parent.W, a...)
-	}else if q.parent != nil && q.parent.W == nil {
+	} else if q.parent != nil && q.parent.W == nil {
 		fmt.Print(q.parent.T)
 		fmt.Print(a...)
-	}else{
+	} else {
 		fmt.Print(a...)
 	}
 

@@ -12,8 +12,8 @@ type I interface {
 
 type Interact struct {
 	Prefix
-	Errors, Name      interface{}
-	Questions []*Quest
+	Errors, Name interface{}
+	Questions    []*Quest
 }
 
 type Prefix struct {
@@ -21,27 +21,27 @@ type Prefix struct {
 	T interface{}
 }
 
-func Run(i I) (*Interact,error){
+func Run(i I) (*Interact, error) {
 	context := i.context()
-	if err := i.ask(context); err != nil{
-		return nil,err
+	if err := i.ask(context); err != nil {
+		return nil, err
 	}
-	return i.quest(),nil
+	return i.quest(), nil
 }
 
-func(i *Interact) context() *Context{
-	return &Context{interact:i}
+func (i *Interact) context() *Context {
+	return &Context{interact: i}
 }
 
-func (i *Interact) quest() *Interact{
+func (i *Interact) quest() *Interact {
 	return i
 }
 
-func (i *Interact) ask(c *Context) (err error){
+func (i *Interact) ask(c *Context) (err error) {
 	for _, q := range i.Questions {
 		q.parent = i
 		c.quest = q
-		if err = q.ask(c); err != nil{
+		if err = q.ask(c); err != nil {
 			return err
 		}
 	}
