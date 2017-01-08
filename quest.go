@@ -11,10 +11,8 @@ import (
 
 type Quest struct {
 	*Q
-	SubQuest []*Quest
-	Validate ContextFunc // validate output
-	Filter   ContextFunc // quests conditions for sub questions
-
+	*S
+	Validate Validate // validate output
 	parent *Interact
 	resp   string
 }
@@ -28,9 +26,14 @@ type D struct {
 	Text, Value interface{}
 }
 
+type S struct {
+	Questions []*Quest
+	Filter   Filter // quests conditions for sub questions
+}
+
 func (q *Quest) context() *Context {
 	i := Interact{}
-	return &Context{interact: &i}
+	return &Context{interact: &i, quest: q}
 }
 
 func (q *Quest) quest() *Interact {
@@ -40,28 +43,38 @@ func (q *Quest) quest() *Interact {
 }
 
 func (q *Quest) ask(c *Context) (err error) {
-	if q.parent != nil && q.parent.W != nil {
-		fmt.Fprint(q.parent.W, q.parent.T, " ")
-		fmt.Fprint(q.parent.W, q.Text, ": ")
-	} else {
-		q.print(q.Text, ": ")
+	if q.parent != nil && q.parent.T!= nil {
+		q.print(q.parent.T," ")
+	}
+	if q.Text != nil{
+		q.print(q.Text," ")
 	}
 	if q.Default.Value != nil {
-		fmt.Print(q.Default.Text, " ")
+		q.print(q.Default.Text, " ")
 	}
 	if err = q.wait(); err != nil {
 		return err
 	}
 	if err = q.response(); err != nil {
 		if q.Err != nil {
-			fmt.Print(q.Err, " ")
+			q.print(q.Err, " ")
 		}
 		return q.ask(c)
 	}
 	if err := q.Validate(c); err != nil {
-		fmt.Print(err, " ")
+		q.print(err, " ")
 		return q.ask(c)
 	}
+	if q.S != nil && len(q.S) > 0 {
+		if err := q.Filter(c); err != nil {
+			for _, s := range q.Questions {
+				s.ask(c)
+			}
+		}
+
+	}
+	// check for sub quests
+
 	return nil
 }
 
@@ -144,10 +157,7 @@ func (q *Quest) response() error {
 func (q *Quest) print(a ...interface{}) {
 	if q.parent != nil && q.parent.W != nil {
 		fmt.Fprint(q.parent.W, a...)
-	} else if q.parent != nil && q.parent.W == nil {
-		fmt.Print(q.parent.T)
-		fmt.Print(a...)
-	} else {
+	}else {
 		fmt.Print(a...)
 	}
 

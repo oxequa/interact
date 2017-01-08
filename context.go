@@ -5,4 +5,6 @@ type Context struct {
 	quest    *Quest
 }
 
-type ContextFunc func(*Context) interface{}
+type Validate func(*Context) interface{}
+
+type Filter func(*Context) error
