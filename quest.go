@@ -9,77 +9,102 @@ import (
 	"time"
 )
 
+type Question struct {
+	resp    string
+	parent  *Interact
+	choices bool
+	*Quest
+	Subs
+	Action                 InterfaceFunc
+	After, Before, Resolve ErrorFunc
+}
+
+type Choices struct {
+	Alternatives []Choice
+	Prefix string
+	Color    func(...interface{}) string
+}
+
+type Choice struct {
+	Response interface{}
+	Text     string
+}
+
 type Quest struct {
-	*Q
-	*S
-	Validate Validate // validate output
-	parent *Interact
-	resp   string
+	Response interface{}
+	Default
+	Options, Err, Text string
+	Choices
 }
 
-type Q struct {
-	Text, Err, Response interface{}
-	Default             D
+type Default struct {
+	Text   interface{}
+	Status bool
 }
 
-type D struct {
-	Text, Value interface{}
+// Related sub questions
+type Subs struct {
+	Questions []*Question
+	Resolve   ErrorFunc // quests conditions for sub questions
 }
 
-type S struct {
-	Questions []*Quest
-	Filter   Filter // quests conditions for sub questions
-}
-
-func (q *Quest) context() *Context {
+func (q *Question) context() *Context {
 	i := Interact{}
 	return &Context{interact: &i, quest: q}
 }
 
-func (q *Quest) quest() *Interact {
+func (q *Question) quest() *Interact {
 	i := Interact{}
 	i.Questions = append(i.Questions, q)
 	return &i
 }
 
-func (q *Quest) ask(c *Context) (err error) {
-	if q.parent != nil && q.parent.T!= nil {
-		q.print(q.parent.T," ")
+func (q *Question) ask(c *Context) (err error) {
+	if q.parent != nil && q.parent.Text != nil {
+		q.print(q.parent.Text, " ")
 	}
-	if q.Text != nil{
-		q.print(q.Text," ")
+	if q.Text != "" {
+		q.print(q.Text, " ")
 	}
-	if q.Default.Value != nil {
+	if q.Options != "" {
+		q.print(q.Options, " ")
+	}
+	if q.Default.Status != false {
 		q.print(q.Default.Text, " ")
 	}
+	if q.Alternatives != nil && len(q.Alternatives) > 0 {
+		for index, i := range q.Alternatives {
+			q.print("\n", q.Prefix, q.Color(index+1, ") "), i.Text, " ")
+		}
+		q.choices = true
+		q.print("\n")
+	}
 	if err = q.wait(); err != nil {
-		return err
+		return q.loop(err, c)
 	}
 	if err = q.response(); err != nil {
-		if q.Err != nil {
-			q.print(q.Err, " ")
-		}
-		return q.ask(c)
+		return q.loop(err, c)
 	}
-	if err := q.Validate(c); err != nil {
+	if err := q.Action(c); err != nil {
 		q.print(err, " ")
 		return q.ask(c)
 	}
-	if q.S != nil && len(q.S) > 0 {
-		if err := q.Filter(c); err != nil {
-			for _, s := range q.Questions {
+	if q.Subs.Questions != nil && len(q.Subs.Questions) > 0 {
+		if err := q.Subs.Resolve(c); err != nil {
+			for _, s := range q.Subs.Questions {
 				s.ask(c)
 			}
 		}
 
 	}
-	// check for sub quests
-
 	return nil
 }
 
-func (q *Quest) wait() error {
+func (q *Question) wait() error {
 	reader := bufio.NewReader(os.Stdin)
+	if q.choices {
+		q.print(q.Color("?")," ","Answer"," ")
+	}
 	r, err := reader.ReadString('\n')
 	if err != nil {
 		return err
@@ -88,9 +113,22 @@ func (q *Quest) wait() error {
 	return nil
 }
 
-func (q *Quest) response() error {
+func (q *Question) response() error {
 	var v interface{}
 	var err error
+
+	// dafault response
+	if len(q.resp) == 0 && q.Default.Status{
+		return nil
+	}
+	// multiple choice
+	if q.choices{
+		q.Response, err = strconv.ParseInt(q.resp, 10, 64)
+		if (err != nil){
+			return err
+		}
+		q.Response = q.Alternatives[q.Response.(int64)-1].Response
+	}
 
 	switch q.Response.(type) {
 	case uint:
@@ -154,11 +192,18 @@ func (q *Quest) response() error {
 	return err
 }
 
-func (q *Quest) print(a ...interface{}) {
-	if q.parent != nil && q.parent.W != nil {
-		fmt.Fprint(q.parent.W, a...)
-	}else {
+func (q *Question) print(a ...interface{}) {
+	if q.parent != nil && q.parent.Writer != nil {
+		fmt.Fprint(q.parent.Writer, a...)
+	} else {
 		fmt.Print(a...)
 	}
 
+}
+
+func (q *Question) loop (err error, c *Context) error{
+	if q.Err != "" {
+		q.print(q.Err, " ")
+	}
+	return q.ask(c)
 }

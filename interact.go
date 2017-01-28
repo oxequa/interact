@@ -4,23 +4,27 @@ import (
 	"io"
 )
 
+// Interact interface
 type I interface {
 	ask(*Context) error
 	quest() *Interact
 	context() *Context
 }
 
+// Interact element
 type Interact struct {
-	Prefix
-	Errors, Name interface{}
-	Questions    []*Quest
+	prefix
+	Questions     []*Question
+	After, Before ErrorFunc
 }
 
-type Prefix struct {
-	W io.Writer
-	T interface{}
+// Questions prefix
+type prefix struct {
+	Writer io.Writer
+	Text   interface{}
 }
 
+// Run a questions list
 func Run(i I) (*Interact, error) {
 	context := i.context()
 	if err := i.ask(context); err != nil {
