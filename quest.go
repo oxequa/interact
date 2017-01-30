@@ -9,32 +9,23 @@ import (
 	"time"
 )
 
+type Quest struct {
+	Choices
+	Default
+	parent             *Question
+	Response           interface{}
+	Options, Err, Msg string
+}
+
 type Question struct {
-	resp    string
-	parent  *Interact
-	choices bool
-	*Quest
 	Subs
+	*Quest
+	prefix
+	choices                bool
+	resp                   string
+	parent                 *Interact
 	Action                 InterfaceFunc
 	After, Before, Resolve ErrorFunc
-}
-
-type Choices struct {
-	Alternatives []Choice
-	Prefix string
-	Color    func(...interface{}) string
-}
-
-type Choice struct {
-	Response interface{}
-	Text     string
-}
-
-type Quest struct {
-	Response interface{}
-	Default
-	Options, Err, Text string
-	Choices
 }
 
 type Default struct {
@@ -48,23 +39,33 @@ type Subs struct {
 	Resolve   ErrorFunc // quests conditions for sub questions
 }
 
-func (q *Question) context() *Context {
-	i := Interact{}
-	return &Context{interact: &i, quest: q}
+func (q *Question) context() Context {
+	c := context{model: q}
+	return &c
 }
 
-func (q *Question) quest() *Interact {
-	i := Interact{}
-	i.Questions = append(i.Questions, q)
-	return &i
+func (q *Question) answer() interface{} {
+	return q.Response
 }
 
-func (q *Question) ask(c *Context) (err error) {
+func (q *Question) append(p prefix) {
+	q.prefix = p
+}
+
+func (q *Question) father() model {
+	return q.parent
+}
+
+func (q *Question) ask() (err error) {
+	context := q.context()
+	if err := q.Before(context); err != nil {
+		return err
+	}
 	if q.parent != nil && q.parent.Text != nil {
 		q.print(q.parent.Text, " ")
 	}
-	if q.Text != "" {
-		q.print(q.Text, " ")
+	if q.Msg != "" {
+		q.print(q.Msg, " ")
 	}
 	if q.Options != "" {
 		q.print(q.Options, " ")
@@ -74,28 +75,32 @@ func (q *Question) ask(c *Context) (err error) {
 	}
 	if q.Alternatives != nil && len(q.Alternatives) > 0 {
 		for index, i := range q.Alternatives {
-			q.print("\n", q.Prefix, q.Color(index+1, ") "), i.Text, " ")
+			i.parent = q
+			q.print("\n\t", q.Color(index+1, ") "), i.Text, " ")
 		}
 		q.choices = true
 		q.print("\n")
 	}
 	if err = q.wait(); err != nil {
-		return q.loop(err, c)
+		return q.loop(err)
 	}
 	if err = q.response(); err != nil {
-		return q.loop(err, c)
+		return q.loop(err)
 	}
-	if err := q.Action(c); err != nil {
+	if err := q.Action(context); err != nil {
 		q.print(err, " ")
-		return q.ask(c)
+		return q.ask()
 	}
 	if q.Subs.Questions != nil && len(q.Subs.Questions) > 0 {
-		if err := q.Subs.Resolve(c); err != nil {
+		if err := q.Subs.Resolve(context); err != nil {
 			for _, s := range q.Subs.Questions {
-				s.ask(c)
+				s.ask()
 			}
 		}
 
+	}
+	if err := q.After(context); err != nil {
+		return err
 	}
 	return nil
 }
@@ -103,7 +108,7 @@ func (q *Question) ask(c *Context) (err error) {
 func (q *Question) wait() error {
 	reader := bufio.NewReader(os.Stdin)
 	if q.choices {
-		q.print(q.Color("?")," ","Answer"," ")
+		q.print(q.Color("?"), " ", "Answer", " ")
 	}
 	r, err := reader.ReadString('\n')
 	if err != nil {
@@ -118,13 +123,13 @@ func (q *Question) response() error {
 	var err error
 
 	// dafault response
-	if len(q.resp) == 0 && q.Default.Status{
+	if len(q.resp) == 0 && q.Default.Status {
 		return nil
 	}
 	// multiple choice
-	if q.choices{
+	if q.choices {
 		q.Response, err = strconv.ParseInt(q.resp, 10, 64)
-		if (err != nil){
+		if err != nil {
 			return err
 		}
 		q.Response = q.Alternatives[q.Response.(int64)-1].Response
@@ -201,9 +206,9 @@ func (q *Question) print(a ...interface{}) {
 
 }
 
-func (q *Question) loop (err error, c *Context) error{
+func (q *Question) loop(err error) error {
 	if q.Err != "" {
 		q.print(q.Err, " ")
 	}
-	return q.ask(c)
+	return q.ask()
 }

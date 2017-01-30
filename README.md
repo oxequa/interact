@@ -3,8 +3,6 @@ Status: in progress
 ```
 package main
 
-package main
-
 import (
 	"github.com/fatih/color"
 	i "github.com/tockins/realize-examples/interact"
@@ -84,3 +82,10 @@ func main() {
 		},
 	})
 }
+
+context diventa un interfaccia e tutte le volte durante il ciclo di quest viene cambiata passa da interact a quest a choice etc
+tutte le funzioni di context diventano quindi metodi non collegati ad una struct ma aventi come argomento l'interfaccia stessa. 
+metodi comuni a tutti e tre i tipi di elementi
+prefix
+response
+etc

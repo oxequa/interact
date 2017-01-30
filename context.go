@@ -1,38 +1,62 @@
 package interact
 
-import "io"
+import (
+	"io"
+)
 
-type Context struct {
-	interact *Interact
-	quest    *Question
+type (
+	Context interface {
+		Parent() Context
+		Int() int
+		Uint() uint
+		Bool() bool
+		String() string
+		Value() interface{}
+		Prefix(io.Writer, interface{})
+	}
+	context struct {
+		model
+	}
+)
+
+type model interface {
+	father() model
+	append(prefix)
+	context() Context
+	answer() interface{}
 }
 
-type InterfaceFunc func(*Context) interface{}
+type ErrorFunc func(Context) error
 
-type ErrorFunc func(*Context) error
+type InterfaceFunc func(Context) interface{}
 
-func (c *Context) Prefix(w io.Writer, t interface{}) error {
-	c.interact.prefix.Writer = w
-	c.interact.prefix.Text = t
-	return nil
+func (c *context) Int() int {
+	return c.answer().(int)
 }
 
-func (c *Context) Response() interface{} {
-	return c.quest.Response
+func (c *context) Uint() uint {
+	return c.answer().(uint)
 }
 
-func (c *Context) ResponseBool() bool {
-	return c.quest.Response.(bool)
+func (c *context) Bool() bool {
+	return c.answer().(bool)
 }
 
-func (c *Context) ResponseString() string {
-	return c.quest.Response.(string)
+func (c *context) String() string {
+	return c.answer().(string)
 }
 
-func (c *Context) ResponseInt() int {
-	return c.quest.Response.(int)
+func (c *context) Parent() Context {
+	clone := c
+	clone.model = clone.father()
+	return clone
 }
 
-func (c *Context) ResponseChoice() int {
-	return c.quest.Response.(int)
+func (c *context) Value() interface{} {
+	return c.answer()
+}
+
+func (c *context) Prefix(w io.Writer, t interface{}) {
+	p := prefix{w,t}
+	c.append(p)
 }

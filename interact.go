@@ -4,11 +4,9 @@ import (
 	"io"
 )
 
-// Interact interface
-type I interface {
-	ask(*Context) error
-	quest() *Interact
-	context() *Context
+type interact interface {
+	ask() error
+	context() Context
 }
 
 // Interact element
@@ -25,29 +23,47 @@ type prefix struct {
 }
 
 // Run a questions list
-func Run(i I) (*Interact, error) {
-	context := i.context()
-	if err := i.ask(context); err != nil {
-		return nil, err
+func Run(i interact) error {
+	if err := i.ask(); err != nil {
+		return err
 	}
-	return i.quest(), nil
+	return nil
 }
 
-func (i *Interact) context() *Context {
-	return &Context{interact: i}
+func (i *Interact) append(p prefix) {
+	i.prefix = p
 }
 
-func (i *Interact) quest() *Interact {
+func (i *Interact) father() model {
 	return i
 }
 
-func (i *Interact) ask(c *Context) (err error) {
-	for _, q := range i.Questions {
-		q.parent = i
-		c.quest = q
-		if err = q.ask(c); err != nil {
+func (i *Interact) ask() (err error) {
+	context := i.context()
+	if err := i.Before(context); err != nil {
+		return err
+	}
+	for index := range i.Questions {
+		i.Questions[index].parent = i
+		if err = i.Questions[index].ask(); err != nil {
 			return err
 		}
 	}
+	if err := i.After(context); err != nil {
+		return err
+	}
 	return nil
+}
+
+func (i *Interact) context() Context {
+	c := context{model: i}
+	return &c
+}
+
+func (i *Interact) answer() interface{} {
+	answers := []interface{}{}
+	for _, q := range i.Questions {
+		answers = append(answers, q.Quest.Response)
+	}
+	return answers
 }
