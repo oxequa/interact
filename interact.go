@@ -2,7 +2,6 @@ package interact
 
 import (
 	"io"
-	"fmt"
 )
 
 type interact interface {
