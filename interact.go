@@ -50,7 +50,6 @@ func (i *Interact) ask() (err error) {
 		}
 	}
 	if err := i.After(context); err != nil {
-		fmt.Println(context)
 		return err
 	}
 	return nil
