@@ -7,11 +7,9 @@ import (
 type (
 	Context interface {
 		Parent() Context
-		Int() int
-		Uint() uint
-		Bool() bool
-		String() string
-		Value() interface{}
+		Answer() Value
+		Answers() []Value
+		Input() Value
 		Prefix(io.Writer, interface{})
 	}
 	context struct {
@@ -19,32 +17,21 @@ type (
 	}
 )
 
-type model interface {
-	father() model
-	append(prefix)
-	context() Context
-	answer() interface{}
-}
+type(
+	model interface {
+		father() model
+		append(prefix)
+		answer() interface{}
+	}
+	response struct {
+		input interface{}
+		answer interface{}
+	}
+)
 
 type ErrorFunc func(Context) error
 
 type InterfaceFunc func(Context) interface{}
-
-func (c *context) Int() int {
-	return c.answer().(int)
-}
-
-func (c *context) Uint() uint {
-	return c.answer().(uint)
-}
-
-func (c *context) Bool() bool {
-	return c.answer().(bool)
-}
-
-func (c *context) String() string {
-	return c.answer().(string)
-}
 
 func (c *context) Parent() Context {
 	clone := c
@@ -52,8 +39,22 @@ func (c *context) Parent() Context {
 	return clone
 }
 
-func (c *context) Value() interface{} {
-	return c.answer()
+func (c *context) Answer() Value {
+	answ := c.answer().(response)
+	return &value{val: answ.answer}
+}
+
+func (c *context) Answers() (v []Value) {
+	answers, _ := c.answer().([]response)
+	for index := range answers{
+		v = append(v,&value{val:answers[index].answer})
+	}
+	return v
+}
+
+func (c *context) Input() Value {
+	answ := c.answer().(response)
+	return &value{val: answ.input}
 }
 
 func (c *context) Prefix(w io.Writer, t interface{}) {

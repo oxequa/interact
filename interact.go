@@ -2,11 +2,11 @@ package interact
 
 import (
 	"io"
+	"fmt"
 )
 
 type interact interface {
 	ask() error
-	context() Context
 }
 
 // Interact element
@@ -39,7 +39,7 @@ func (i *Interact) father() model {
 }
 
 func (i *Interact) ask() (err error) {
-	context := i.context()
+	context := &context{model: i}
 	if err := i.Before(context); err != nil {
 		return err
 	}
@@ -50,20 +50,16 @@ func (i *Interact) ask() (err error) {
 		}
 	}
 	if err := i.After(context); err != nil {
+		fmt.Println(context)
 		return err
 	}
 	return nil
 }
 
-func (i *Interact) context() Context {
-	c := context{model: i}
-	return &c
-}
-
 func (i *Interact) answer() interface{} {
-	answers := []interface{}{}
+	answers := []response{}
 	for _, q := range i.Questions {
-		answers = append(answers, q.Quest.Response)
+		answers = append(answers, response{answer:q.Response, input: q.resp})
 	}
 	return answers
 }

@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// Question params
 type Quest struct {
 	Choices
 	Default
@@ -17,17 +18,20 @@ type Quest struct {
 	Options, Err, Msg string
 }
 
+// Question entity
 type Question struct {
 	Subs
-	*Quest
+	Quest
 	prefix
 	choices                bool
 	resp                   string
+	input interface{}
 	parent                 *Interact
 	Action                 InterfaceFunc
 	After, Before, Resolve ErrorFunc
 }
 
+// Default options
 type Default struct {
 	Text   interface{}
 	Status bool
@@ -39,13 +43,20 @@ type Subs struct {
 	Resolve   ErrorFunc // quests conditions for sub questions
 }
 
-func (q *Question) context() Context {
-	c := context{model: q}
-	return &c
+// Choice option
+type Choice struct {
+	Text     string
+	Response interface{}
 }
 
-func (q *Question) answer() interface{} {
-	return q.Response
+// Choices list and prefix color
+type Choices struct {
+	Alternatives []Choice
+	Color        func(...interface{}) string
+}
+
+func (q *Question) answer() interface {}{
+	return response{answer:q.Response, input:q.input}
 }
 
 func (q *Question) append(p prefix) {
@@ -57,7 +68,7 @@ func (q *Question) father() model {
 }
 
 func (q *Question) ask() (err error) {
-	context := q.context()
+	context := &context{model: q}
 	if err := q.Before(context); err != nil {
 		return err
 	}
@@ -74,12 +85,7 @@ func (q *Question) ask() (err error) {
 		q.print(q.Default.Text, " ")
 	}
 	if q.Alternatives != nil && len(q.Alternatives) > 0 {
-		for index, i := range q.Alternatives {
-			i.parent = q
-			q.print("\n\t", q.Color(index+1, ") "), i.Text, " ")
-		}
-		q.choices = true
-		q.print("\n")
+		q.multiple()
 	}
 	if err = q.wait(); err != nil {
 		return q.loop(err)
@@ -115,6 +121,7 @@ func (q *Question) wait() error {
 		return err
 	}
 	q.resp = r[:len(r)-1]
+	q.input = q.resp
 	return nil
 }
 
@@ -132,6 +139,7 @@ func (q *Question) response() error {
 		if err != nil {
 			return err
 		}
+		q.input = int(q.Response.(int64))
 		q.Response = q.Alternatives[q.Response.(int64)-1].Response
 	}
 
@@ -211,4 +219,13 @@ func (q *Question) loop(err error) error {
 		q.print(q.Err, " ")
 	}
 	return q.ask()
+}
+
+func (q *Question) multiple() error{
+	for index, i := range q.Alternatives {
+		q.print("\n\t", q.Color(index+1, ") "), i.Text, " ")
+	}
+	q.choices = true
+	q.print("\n")
+	return nil
 }
