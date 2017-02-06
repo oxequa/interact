@@ -72,7 +72,9 @@ func (q *Question) ask() (err error) {
 	if err := q.Before(context); err != nil {
 		return err
 	}
-	if q.parent != nil && q.parent.Text != nil {
+	if q.prefix.Text != nil{
+		q.print(q.prefix.Text, " ")
+	}else if q.parent != nil && q.parent.Text != nil {
 		q.print(q.parent.Text, " ")
 	}
 	if q.Msg != "" {
