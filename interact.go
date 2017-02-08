@@ -2,7 +2,6 @@ package interact
 
 import (
 	"io"
-	"fmt"
 )
 
 type interact interface {
@@ -56,7 +55,6 @@ func (i *Interact) ask() (err error) {
 }
 
 func (i *Interact) answer() interface{} {
-	fmt.Println("interact")
 	answers := []response{}
 	for _, q := range i.Questions {
 		answers = append(answers, response{answer:q.Response, input: q.resp})
