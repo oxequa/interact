@@ -16,11 +16,11 @@ type Quest struct {
 	parent             *Question
 	Response           interface{}
 	Options, Err, Msg string
+	Resolve BoolFunc
 }
 
 // Question entity
 type Question struct {
-	Subs
 	Quest
 	prefix
 	choices                bool
@@ -28,19 +28,14 @@ type Question struct {
 	input interface{}
 	parent                 *Interact
 	Action                 InterfaceFunc
-	After, Before, Resolve ErrorFunc
+	Subs []*Question
+	After, Before ErrorFunc
 }
 
 // Default options
 type Default struct {
 	Text   interface{}
 	Status bool
-}
-
-// Related sub questions
-type Subs struct {
-	Questions []*Question
-	Resolve   ErrorFunc // quests conditions for sub questions
 }
 
 // Choice option
@@ -69,7 +64,7 @@ func (q *Question) father() model {
 
 func (q *Question) ask() (err error) {
 	context := &context{model: q}
-	if err := q.Before(context); err != nil {
+	if err := context.method(q.Before); err != nil{
 		return err
 	}
 	if q.prefix.Text != nil{
@@ -95,19 +90,28 @@ func (q *Question) ask() (err error) {
 	if err = q.response(); err != nil {
 		return q.loop(err)
 	}
-	if err := q.Action(context); err != nil {
-		q.print(err, " ")
-		return q.ask()
-	}
-	if q.Subs.Questions != nil && len(q.Subs.Questions) > 0 {
-		if err := q.Subs.Resolve(context); err != nil {
-			for _, s := range q.Subs.Questions {
+	if q.Subs != nil && len(q.Subs) > 0 {
+		if q.Resolve != nil {
+			if q.Resolve(context){
+				for _, s := range q.Subs {
+					s.parent = q.parent
+					s.ask()
+				}
+			}
+		}else{
+			for _, s := range q.Subs {
+				s.parent = q.parent
 				s.ask()
 			}
 		}
-
 	}
-	if err := q.After(context); err != nil {
+	if q.Action != nil {
+		if err := q.Action(context); err != nil {
+			q.print(err, " ")
+			return q.ask()
+		}
+	}
+	if err := context.method(q.After); err != nil{
 		return err
 	}
 	return nil

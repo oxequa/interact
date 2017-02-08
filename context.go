@@ -31,16 +31,16 @@ type(
 
 type ErrorFunc func(Context) error
 
+type BoolFunc func(Context) bool
+
 type InterfaceFunc func(Context) interface{}
 
 func (c *context) Parent() Context {
-	clone := c
-	clone.model = clone.father()
-	return clone
+	return &context{model: c.father()}
 }
 
 func (c *context) Answer() Value {
-	answ := c.answer().(response)
+	answ,_ := c.answer().(response)
 	return &value{val: answ.answer}
 }
 
@@ -60,4 +60,13 @@ func (c *context) Input() Value {
 func (c *context) Prefix(w io.Writer, t interface{}) {
 	p := prefix{w,t}
 	c.append(p)
+}
+
+func (c *context) method(f ErrorFunc) error{
+	if f != nil{
+		if err := f(c); err != nil {
+			return err
+		}
+	}
+	return nil
 }
