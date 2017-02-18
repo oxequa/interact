@@ -1,3 +1,55 @@
+### Interact
+
+An easy and fast Go library, without external imports, to handle questions and answers by command line
+
+##### Features
+
+- Simple question 
+- Series of questions
+- Multiple choices 
+- Sub questions
+- Questions prefix
+- Questions default values
+- Custom errors 
+- After/Before listeners
+- Colors support (fatih/color)
+- Windows support
+
+##### Installation
+
+To install interact:
+```
+$ go get github.com/tockins/interact
+```
+
+##### Getting Started
+
+Run a simple question and manage the response:
+```
+package main
+
+func main() {
+    i.Run(&i.Question{
+    		Before: func(c i.Context) error{
+    			return nil
+    		},
+    		Quest: i.Quest{
+    			Msg:     "Would you like some coffee?",
+    			Err:      b("INVALID INPUT"),
+    			Response: bool(false),
+    		},
+    		Action: func(c i.Context) interface{} {
+    			fmt.Println(c.Input().Bool())
+    			return nil
+    		},
+    		After: func(c i.Context) error{
+    			return nil
+    		},
+    	})
+}
+``` 
+
+
 Status: in progress
 
 ```

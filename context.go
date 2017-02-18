@@ -54,7 +54,7 @@ func (c *context) Answers() (v []Value) {
 
 func (c *context) Input() Value {
 	answ := c.answer().(response)
-	return &value{val: answ.input}
+	return &value{val: answ.answer}
 }
 
 func (c *context) Prefix(w io.Writer, t interface{}) {
