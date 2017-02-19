@@ -33,8 +33,8 @@ package main
 func main() {
     i.Run(&i.Question{
     		Quest: i.Quest{
-    			Msg:     "Would you like some coffee?",
-    			Err:      b("INVALID INPUT"),
+    			Msg:      "Would you like some coffee?",
+    			Err:      "INVALID INPUT",
     			Response: bool(false),
     		},
     		Action: func(c i.Context) interface{} {
