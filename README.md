@@ -74,7 +74,7 @@ func main() {
                     Response: int(0),
                 },
                 Action: func(c i.Context) interface{} {
-                    // get the answer as bool
+                    // get the answer as integer
                     if c.Answer().Int() < 4 {
                         // return a custom error and rerun the question
                         return "INCREASE"
