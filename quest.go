@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
-	"time"
+	"errors"
 )
 
 // Question params
@@ -14,7 +13,6 @@ type Quest struct {
 	Choices
 	Default
 	parent             *Question
-	Response           interface{}
 	Options, Err, Msg string
 	Resolve BoolFunc
 }
@@ -23,9 +21,10 @@ type Quest struct {
 type Question struct {
 	Quest
 	prefix
+	err                    error
 	choices                bool
-	resp                   string
-	input interface{}
+	response               string
+	choice                 interface{}
 	parent                 *Interact
 	Action                 InterfaceFunc
 	Subs []*Question
@@ -50,8 +49,8 @@ type Choices struct {
 	Color        func(...interface{}) string
 }
 
-func (q *Question) answer() interface {}{
-	return response{answer:q.Response, input:q.input}
+func (q *Question) answer() interface{}{
+	return value{answer:q.response, choice: q.choice, err: q.err}
 }
 
 func (q *Question) append(p prefix) {
@@ -87,9 +86,6 @@ func (q *Question) ask() (err error) {
 	if err = q.wait(); err != nil {
 		return q.loop(err)
 	}
-	if err = q.response(); err != nil {
-		return q.loop(err)
-	}
 	if q.Subs != nil && len(q.Subs) > 0 {
 		if q.Resolve != nil {
 			if q.Resolve(context){
@@ -120,104 +116,42 @@ func (q *Question) ask() (err error) {
 func (q *Question) wait() error {
 	reader := bufio.NewReader(os.Stdin)
 	if q.choices {
-		q.print(q.Color("?"), " ", "Answer", " ")
+		q.print(q.color("?"), " ", "Answer", " ")
 	}
 	r, err := reader.ReadString('\n')
 	if err != nil {
 		return err
 	}
-	q.resp = r[:len(r)-1]
-	q.input = q.resp
-	return nil
-}
+	q.response = r[:len(r)-1]
 
-func (q *Question) response() error {
-	var v interface{}
-	var err error
-
-	// dafault response
-	if len(q.resp) == 0 && q.Default.Status {
+	if len(q.response) == 0 && q.Default.Status {
 		return nil
 	}
 	// multiple choice
 	if q.choices {
-		q.Response, err = strconv.ParseInt(q.resp, 10, 64)
-		if err != nil {
-			return err
+		choice, err := strconv.ParseInt(q.response, 10, 64)
+		if err != nil || int(choice) > len(q.Alternatives) {
+			return errors.New("out of range")
 		}
-		q.input = int(q.Response.(int64))
-		q.Response = q.Alternatives[q.Response.(int64)-1].Response
+		q.choice = q.Alternatives[choice-1].Response
 	}
-
-	switch q.Response.(type) {
-	case uint:
-		if v, err = strconv.ParseUint(q.resp, 10, 32); err == nil {
-			q.Response = uint(v.(uint64))
-		}
-	case uint8:
-		if v, err = strconv.ParseUint(q.resp, 10, 8); err == nil {
-			q.Response = uint8(v.(uint64))
-		}
-	case uint16:
-		if v, err = strconv.ParseUint(q.resp, 10, 16); err == nil {
-			q.Response = uint16(v.(uint64))
-		}
-	case uint32:
-		if v, err = strconv.ParseUint(q.resp, 10, 32); err == nil {
-			q.Response = uint32(v.(uint64))
-		}
-	case uint64:
-		q.Response, err = strconv.ParseUint(q.resp, 10, 64)
-	case int:
-		if v, err = strconv.ParseInt(q.resp, 10, 32); err == nil {
-			q.Response = int(v.(int64))
-		}
-	case int8:
-		if v, err = strconv.ParseInt(q.resp, 10, 8); err == nil {
-			q.Response = int8(v.(int64))
-		}
-	case int16:
-		if v, err = strconv.ParseInt(q.resp, 10, 16); err == nil {
-			q.Response = int16(v.(int64))
-		}
-	case int32:
-		if v, err = strconv.ParseInt(q.resp, 10, 32); err == nil {
-			q.Response = int32(v.(int64))
-		}
-	case int64:
-		q.Response, err = strconv.ParseInt(q.resp, 10, 64)
-	case float32:
-		if v, err = strconv.ParseFloat(q.resp, 64); err == nil {
-			q.Response = float32(v.(float64))
-		}
-	case float64:
-		q.Response, err = strconv.ParseFloat(q.resp, 64)
-	case bool:
-		if q.resp == "y" || q.resp == "yes" {
-			q.Response = true
-		} else if q.resp == "n" || q.resp == "no" {
-			q.Response = false
-		} else {
-			q.Response, err = strconv.ParseBool(q.resp)
-		}
-	case time.Duration:
-		if v, err = strconv.ParseUint(q.resp, 10, 64); err == nil {
-			q.Response = time.Duration(v.(uint64)) * time.Second
-		}
-	case string:
-	default:
-		q.Response = strings.ToLower(strings.TrimSpace(q.resp))
-	}
-	return err
+	return nil
 }
 
-func (q *Question) print(a ...interface{}) {
+func (q *Question) print(v ...interface{}) {
 	if q.parent != nil && q.parent.Writer != nil {
-		fmt.Fprint(q.parent.Writer, a...)
+		fmt.Fprint(q.parent.Writer, v...)
 	} else {
-		fmt.Print(a...)
+		fmt.Print(v...)
 	}
 
+}
+
+func (q *Question) color(v ...interface{}) string{
+	if q.Color != nil{
+		return q.Color(v...)
+	}
+	return fmt.Sprint(v...)
 }
 
 func (q *Question) loop(err error) error {
@@ -228,8 +162,8 @@ func (q *Question) loop(err error) error {
 }
 
 func (q *Question) multiple() error{
-	for index, i := range q.Alternatives {
-		q.print("\n\t", q.Color(index+1, ") "), i.Text, " ")
+	for index,i := range q.Alternatives {
+		q.print("\n\t", q.color(index + 1, ") "), i.Text, " ")
 	}
 	q.choices = true
 	q.print("\n")

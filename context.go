@@ -23,10 +23,6 @@ type(
 		append(prefix)
 		answer() interface{}
 	}
-	response struct {
-		input interface{}
-		answer interface{}
-	}
 )
 
 type ErrorFunc func(Context) error
@@ -40,21 +36,21 @@ func (c *context) Parent() Context {
 }
 
 func (c *context) Answer() Value {
-	answ,_ := c.answer().(response)
-	return &value{val: answ.answer}
+	answ,_ := c.answer().(value)
+	return &answ
 }
 
 func (c *context) Answers() (v []Value) {
-	answers, _ := c.answer().([]response)
+	answers, _ := c.answer().([]value)
 	for index := range answers{
-		v = append(v,&value{val:answers[index].answer})
+		v = append(v,&answers[index])
 	}
 	return v
 }
 
 func (c *context) Input() Value {
-	answ := c.answer().(response)
-	return &value{val: answ.answer}
+	answ := c.answer().(value)
+	return &answ
 }
 
 func (c *context) Prefix(w io.Writer, t interface{}) {

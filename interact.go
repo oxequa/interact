@@ -55,9 +55,9 @@ func (i *Interact) ask() (err error) {
 }
 
 func (i *Interact) answer() interface{} {
-	answers := []response{}
+	answers := []value{}
 	for _, q := range i.Questions {
-		answers = append(answers, response{answer:q.Response, input: q.resp})
+		answers = append(answers, value{answer:q.response, choice: q.choice, err: q.err})
 	}
 	return answers
 }
