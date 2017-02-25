@@ -35,7 +35,6 @@ func main() {
     		Quest: i.Quest{
     			Msg:      "Would you like some coffee?",
     			Err:      "INVALID INPUT",
-    			Response: bool(false),
     		},
     		Action: func(c i.Context) interface{} {
     			fmt.Println(c.Input().Bool())
@@ -60,7 +59,6 @@ func main() {
 				Quest: i.Quest{
 					Msg:     "Would you like some coffee?",
 					Err:      "INVALID INPUT",
-					Response: bool(false),
 				},
 				Action: func(c i.Context) interface{} {
 					fmt.Println(c.Answer().Bool())
@@ -71,7 +69,6 @@ func main() {
                 Quest: i.Quest{
                     Msg:     "What's 2+2?",
                     Err:      "INVALID INPUT",
-                    Response: int(0),
                 },
                 Action: func(c i.Context) interface{} {
                     // get the answer as integer
@@ -88,3 +85,48 @@ func main() {
 	})
 }
 ```
+
+##### Multiple choice
+
+Define a multiple choice question
+
+
+```
+package main
+
+func main() {
+	i.Run(&i.Interact{
+		Questions: []*i.Question{
+			{
+				Quest: i.Quest{
+                    Msg:     "how much for a teacup?",
+                    Err:     "INVALID INPUT",
+                    Choices: i.Choices{
+                        Alternatives: []i.Choice{
+                            {
+                                Text: "Gyokuro teapcup",
+                                Response: "20",
+                            },
+                            {
+                                Text: "Sencha teacup",
+                                Response: -10,
+                            },
+                            {
+                                Text: "Matcha teacup",
+                                Response: 15.50,
+                            },
+                        },
+                    },
+                },
+                Action: func(c i.Context) interface{} {
+                    fmt.Println(c.Answer().Int())
+                    return nil
+                },
+			},
+		},
+	})
+}
+```
+
+
+##### Sub questions
