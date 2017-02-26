@@ -30,6 +30,10 @@ The response field is used to get the answer as a specific type.
 ```
 package main
 
+import (
+	i "github.com/tockins/interact"
+)
+
 func main() {
     i.Run(&i.Question{
     		Quest: i.Quest{
@@ -52,6 +56,10 @@ The Action func can be used for validate the answer and can return a custom erro
 Question struct is only for single question whereas *Interact struct* supports multiple questions
 ```
 package main
+
+import (
+	i "github.com/tockins/interact"
+)
 
 func main() {
 	i.Run(&i.Interact{
@@ -94,6 +102,10 @@ Define a multiple choice question
 ```
 package main
 
+import (
+	i "github.com/tockins/interact"
+)
+
 func main() {
 	i.Run(&i.Interact{
 		Questions: []*i.Question{
@@ -135,6 +147,10 @@ Each sub question can access to the parent answer by the "Parent" method
 
 ```
 package main
+
+import (
+	i "github.com/tockins/interact"
+)
 
 func main() {
     i.Run(&i.Question{
