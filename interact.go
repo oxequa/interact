@@ -2,7 +2,6 @@ package interact
 
 import (
 	"io"
-	"fmt"
 )
 
 type interact interface {
@@ -67,9 +66,6 @@ func (i *Interact) writer() io.Writer{
 	return i.Writer
 }
 
-func (i *Interact) lead() string{
-	if(i.Text != nil) {
-		return fmt.Sprint(i.Writer, i.Text)
-	}
-	return ""
+func (i *Interact) lead() interface{}{
+	return i.Text
 }

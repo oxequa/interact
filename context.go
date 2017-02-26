@@ -22,7 +22,7 @@ type(
 		father() model
 		append(prefix)
 		writer() io.Writer
-		lead() string
+		lead() interface{}
 		answer() interface{}
 	}
 )

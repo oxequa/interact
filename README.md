@@ -8,7 +8,7 @@ An easy and fast Go library, without external imports, to handle questions and a
 - [Questions list](#questions-list)
 - [Multiple choices](#multiple-choice)
 - [Sub questions](#sub-questions)
-- Questions prefix
+- [Question prefix](#question-prefix)
 - Questions default values
 - Custom errors 
 - After/Before listeners
@@ -49,6 +49,7 @@ func main() {
 Define a list of questions to be run in sequence.
 The Action func can be used for validate the answer and can return a custom error.
 
+Question struct is only for single question whereas *Interact struct* supports multiple questions
 ```
 package main
 
@@ -89,7 +90,6 @@ func main() {
 ##### Multiple choice
 
 Define a multiple choice question
-Question struct is only for single question whereas Interact struct supports multiple questions
 
 ```
 package main
@@ -123,16 +123,6 @@ func main() {
                     return nil
                 },
 			},
-			{
-                Quest: i.Quest{
-                    Msg:      "Would you like some coffee?",
-                    Err:      "INVALID INPUT",
-                },
-                Action: func(c i.Context) interface{} {
-                    fmt.Println(c.Input().Bool())
-                    return nil
-                },
-            },
 		},
 	})
 }
@@ -185,5 +175,54 @@ func main() {
             return nil
         },
     })
+}
+```
+
+##### Question prefix
+
+Interact support a custom prefix for each question
+
+You can define a *global prefix* for all questions but you can *overwrite it* in each question with ease
+
+With the first param you can pass a custom *io.writer* instance
+
+```
+package main
+
+import (
+	i "github.com/tockins/interact"
+)
+
+func main() {
+	i.Run(&i.Interact{
+		Before: func(c i.Context) error{
+			c.Prefix(nil,"GLOBAL PREFIX")
+			return nil
+		},
+		Questions: []*i.Question{
+			{
+				Before: func(c i.Context) error{
+					c.Prefix(nil,"OVERWRITTEN PREFIX")
+					return nil
+				},
+				Quest: i.Quest{
+					Msg:     "Would you like some coffee?",
+					Err:      "INVALID INPUT",
+				},
+				Action: func(c i.Context) interface{} {
+					return nil
+				},
+			},
+			{
+				Quest: i.Quest{
+					Msg:     "What's 2+2?",
+					Err:      "INVALID INPUT",
+				},
+				Action: func(c i.Context) interface{} {
+					return nil
+				},
+			},
+		},
+	})
 }
 ```

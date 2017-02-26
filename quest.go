@@ -66,11 +66,8 @@ func (q *Question) writer() io.Writer{
 	return q.Writer
 }
 
-func (q *Question) lead() string{
-	if(q.Text != nil) {
-		return fmt.Sprint(q.Writer, q.Text)
-	}
-	return ""
+func (q *Question) lead() interface{}{
+	return q.Text
 }
 
 func (q *Question) ask() (err error) {
@@ -78,7 +75,7 @@ func (q *Question) ask() (err error) {
 	if err := context.method(q.Before); err != nil{
 		return err
 	}
-	if q.lead() != ""{
+	if q.lead() != nil{
 		q.print(q.lead(), " ")
 	}else if q.parent != nil && q.parent.lead() != "" {
 		q.print(q.parent.lead(), " ")
@@ -138,7 +135,10 @@ func (q *Question) wait() error {
 
 	if len(q.response) == 0 && q.Default.Status {
 		return nil
+	}else if len(q.response) == 0{
+		return errors.New("Answer invalid")
 	}
+
 	// multiple choice
 	if q.choices {
 		choice, err := strconv.ParseInt(q.response, 10, 64)
@@ -151,9 +151,11 @@ func (q *Question) wait() error {
 }
 
 func (q *Question) print(v ...interface{}) {
-	if q.parent != nil && q.parent.writer() != nil {
+	if q.parent.writer() != nil{
+		fmt.Fprint(q.writer(), v...)
+	}else if q.parent != nil && q.parent.writer() != nil {
 		fmt.Fprint(q.parent.writer(), v...)
-	} else {
+	}else {
 		fmt.Print(v...)
 	}
 
