@@ -23,7 +23,7 @@ type (
 )
 
 func (v *value) Int() (value int64) {
-	if v.choice != 0 {
+	if v.choice != nil {
 		switch v.choice.(type) {
 		case string:
 			value, _ = strconv.ParseInt(v.choice.(string), 10, 64);
@@ -37,7 +37,7 @@ func (v *value) Int() (value int64) {
 	}else {
 		value, _ = strconv.ParseInt(v.answer, 10, 64)
 	}
-	return
+	return value
 }
 
 func (v *value) Float() (value float64) {
