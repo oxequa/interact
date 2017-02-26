@@ -4,10 +4,10 @@ An easy and fast Go library, without external imports, to handle questions and a
 
 ##### Features
 
-- Single question 
-- Questions list
-- Multiple choices 
-- Sub questions
+- [Single question](#single-question)
+- [Questions list](#questions-list)
+- [Multiple choices](#multiple-choice)
+- [Sub questions](#sub-questions)
 - Questions prefix
 - Questions default values
 - Custom errors 
@@ -23,7 +23,7 @@ To install interact:
 $ go get github.com/tockins/interact
 ```
 
-##### Getting Started - Single question
+##### Single question
 
 Run a simple question and manage the response. 
 The response field is used to get the answer as a specific type.
@@ -86,7 +86,7 @@ func main() {
 }
 ```
 
-##### Multiple choice and multiple questions
+##### Multiple choice
 
 Define a multiple choice question
 Question struct is only for single question whereas Interact struct supports multiple questions
