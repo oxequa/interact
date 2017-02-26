@@ -21,6 +21,8 @@ type(
 	model interface {
 		father() model
 		append(prefix)
+		writer() io.Writer
+		lead() string
 		answer() interface{}
 	}
 )

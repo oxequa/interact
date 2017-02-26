@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"errors"
+	"io"
 )
 
 // Question params
@@ -25,7 +26,7 @@ type Question struct {
 	choices                bool
 	response               string
 	choice                 interface{}
-	parent                 *Interact
+	parent                 model
 	Action                 InterfaceFunc
 	Subs []*Question
 	After, Before ErrorFunc
@@ -61,15 +62,26 @@ func (q *Question) father() model {
 	return q.parent
 }
 
+func (q *Question) writer() io.Writer{
+	return q.Writer
+}
+
+func (q *Question) lead() string{
+	if(q.Text != nil) {
+		return fmt.Sprint(q.Writer, q.Text)
+	}
+	return ""
+}
+
 func (q *Question) ask() (err error) {
 	context := &context{model: q}
 	if err := context.method(q.Before); err != nil{
 		return err
 	}
-	if q.prefix.Text != nil{
-		q.print(q.prefix.Text, " ")
-	}else if q.parent != nil && q.parent.Text != nil {
-		q.print(q.parent.Text, " ")
+	if q.lead() != ""{
+		q.print(q.lead(), " ")
+	}else if q.parent != nil && q.parent.lead() != "" {
+		q.print(q.parent.lead(), " ")
 	}
 	if q.Msg != "" {
 		q.print(q.Msg, " ")
@@ -90,7 +102,7 @@ func (q *Question) ask() (err error) {
 		if q.Resolve != nil {
 			if q.Resolve(context){
 				for _, s := range q.Subs {
-					s.parent = q.parent
+					s.parent = q
 					s.ask()
 				}
 			}
@@ -139,8 +151,8 @@ func (q *Question) wait() error {
 }
 
 func (q *Question) print(v ...interface{}) {
-	if q.parent != nil && q.parent.Writer != nil {
-		fmt.Fprint(q.parent.Writer, v...)
+	if q.parent != nil && q.parent.writer() != nil {
+		fmt.Fprint(q.parent.writer(), v...)
 	} else {
 		fmt.Print(v...)
 	}
