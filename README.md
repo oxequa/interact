@@ -86,10 +86,10 @@ func main() {
 }
 ```
 
-##### Multiple choice
+##### Multiple choice and multiple questions
 
 Define a multiple choice question
-
+Question struct is only for single question whereas Interact struct supports multiple questions
 
 ```
 package main
@@ -123,10 +123,67 @@ func main() {
                     return nil
                 },
 			},
+			{
+                Quest: i.Quest{
+                    Msg:      "Would you like some coffee?",
+                    Err:      "INVALID INPUT",
+                },
+                Action: func(c i.Context) interface{} {
+                    fmt.Println(c.Input().Bool())
+                    return nil
+                },
+            },
 		},
 	})
 }
 ```
 
-
 ##### Sub questions
+
+The sub questions list is managed by the "Resolve" func.
+Each sub question can access to the parent answer by the "Parent" method
+
+```
+package main
+
+func main() {
+    i.Run(&i.Question{
+        Quest: i.Quest{
+            Msg:     "Would you like some coffee?",
+            Err:      "INVALID INPUT",
+            Resolve: func(c i.Context) bool{
+                return c.Answer().Bool()
+            },
+        },
+        Subs: []*i.Question{
+            {
+                Quest: i.Quest{
+                    Msg:     "What Kind of Coffee?",
+                    Err:      "INVALID INPUT",
+                    Choices: i.Choices{
+                        Alternatives: []i.Choice{
+                            {
+                                Text: "Black coffee",
+                                Response: "black",
+                            },
+                            {
+                                Text: "With milk",
+                                Response: "milk",
+                            },
+                        },
+                    },
+                },
+                Action: func(c i.Context) interface{} {
+                    fmt.Println(c.Answer().String())
+                    fmt.Println(c.Parent().Answer().String())
+                    return nil
+                },
+            },
+        },
+        Action: func(c i.Context) interface{} {
+            //fmt.Println(c.Answer().String())
+            return nil
+        },
+    })
+}
+```
