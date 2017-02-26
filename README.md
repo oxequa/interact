@@ -9,7 +9,7 @@ An easy and fast Go library, without external imports, to handle questions and a
 - [Multiple choices](#multiple-choice)
 - [Sub questions](#sub-questions)
 - [Question prefix](#question-prefix)
-- Questions default values
+- [Default values](#default-values)
 - Custom errors 
 - After/Before listeners
 - Colors support (fatih/color)
@@ -53,7 +53,7 @@ func main() {
 Define a list of questions to be run in sequence.
 The Action func can be used for validate the answer and can return a custom error.
 
-Question struct is only for single question whereas *Interact struct* supports multiple questions
+Question struct is only for single question whereas **Interact struct** supports multiple questions
 ```
 package main
 
@@ -142,8 +142,8 @@ func main() {
 
 ##### Sub questions
 
-The sub questions list is managed by the "Resolve" func.
-Each sub question can access to the parent answer by the "Parent" method
+The sub questions list is managed by the **"Resolve"** func.
+Each sub question can access to the parent answer by the **"Parent"** method
 
 ```
 package main
@@ -198,9 +198,9 @@ func main() {
 
 Interact support a custom prefix for each question
 
-You can define a *global prefix* for all questions but you can *overwrite it* in each question with ease
+You can define a **global prefix** for all questions but you can **overwrite it** in each question with ease
 
-With the first param you can pass a custom *io.writer* instance
+With the first param you can pass a custom **io.writer** instance
 
 ```
 package main
@@ -242,3 +242,5 @@ func main() {
 	})
 }
 ```
+
+##### Default values
