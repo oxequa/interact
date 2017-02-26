@@ -27,7 +27,7 @@ $ go get github.com/tockins/interact
 
 Run a simple question and manage the response. 
 The response field is used to get the answer as a specific type.
-```
+``` go
 package main
 
 import (
@@ -54,7 +54,7 @@ Define a list of questions to be run in sequence.
 The Action func can be used for validate the answer and can return a custom error.
 
 Question struct is only for single question whereas **Interact struct** supports multiple questions
-```
+``` go
 package main
 
 import (
@@ -99,7 +99,7 @@ func main() {
 
 Define a multiple choice question
 
-```
+``` go
 package main
 
 import (
@@ -145,7 +145,7 @@ func main() {
 The sub questions list is managed by the **"Resolve"** func.
 Each sub question can access to the parent answer by the **"Parent"** method
 
-```
+``` go
 package main
 
 import (
@@ -202,7 +202,7 @@ You can define a **global prefix** for all questions but you can **overwrite it*
 
 With the first param you can pass a custom **io.writer** instance
 
-```
+``` go
 package main
 
 import (
