@@ -12,7 +12,7 @@ import (
 // Question params
 type Quest struct {
 	Choices
-	Default
+	Default	interface{}
 	parent             *Question
 	Options, Err, Msg string
 	Resolve BoolFunc
@@ -25,17 +25,11 @@ type Question struct {
 	err                    error
 	choices                bool
 	response               string
-	choice                 interface{}
+	value                 interface{}
 	parent                 model
 	Action                 InterfaceFunc
 	Subs []*Question
 	After, Before ErrorFunc
-}
-
-// Default options
-type Default struct {
-	Text   interface{}
-	Status bool
 }
 
 // Choice option
@@ -51,7 +45,7 @@ type Choices struct {
 }
 
 func (q *Question) answer() interface{}{
-	return value{answer:q.response, choice: q.choice, err: q.err}
+	return value{answer:q.response, value: q.value, err: q.err}
 }
 
 func (q *Question) append(p prefix) {
@@ -77,7 +71,7 @@ func (q *Question) ask() (err error) {
 	}
 	if q.lead() != nil{
 		q.print(q.lead(), " ")
-	}else if q.parent != nil && q.parent.lead() != "" {
+	}else if q.parent != nil && q.parent.lead() != nil {
 		q.print(q.parent.lead(), " ")
 	}
 	if q.Msg != "" {
@@ -86,8 +80,8 @@ func (q *Question) ask() (err error) {
 	if q.Options != "" {
 		q.print(q.Options, " ")
 	}
-	if q.Default.Status != false {
-		q.print(q.Default.Text, " ")
+	if q.Default != nil {
+		q.print(q.Default, " ")
 	}
 	if q.Alternatives != nil && len(q.Alternatives) > 0 {
 		q.multiple()
@@ -133,7 +127,8 @@ func (q *Question) wait() error {
 	}
 	q.response = r[:len(r)-1]
 
-	if len(q.response) == 0 && q.Default.Status {
+	if len(q.response) == 0 && q.Default != nil {
+		q.value = q.Default
 		return nil
 	}else if len(q.response) == 0{
 		return errors.New("Answer invalid")
@@ -145,7 +140,7 @@ func (q *Question) wait() error {
 		if err != nil || int(choice) > len(q.Alternatives) {
 			return errors.New("out of range")
 		}
-		q.choice = q.Alternatives[choice-1].Response
+		q.value = q.Alternatives[choice-1].Response
 	}
 	return nil
 }

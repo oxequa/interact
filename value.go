@@ -17,20 +17,20 @@ type (
 	}
 	value struct {
 		answer string
-		choice interface{}
+		value interface{}
 		err error
 	}
 )
 
 func (v *value) Int() (value int64) {
-	if v.choice != nil {
-		switch v.choice.(type) {
+	if v.value != nil {
+		switch v.value.(type) {
 		case string:
-			value, _ = strconv.ParseInt(v.choice.(string), 10, 64);
+			value, _ = strconv.ParseInt(v.value.(string), 10, 64);
 		case float64:
-			value = int64(v.choice.(float64))
+			value = int64(v.value.(float64))
 		case int:
-			value = int64(v.choice.(int))
+			value = int64(v.value.(int))
 		default:
 			v.err = errors.New("conversion as int failed")
 		}
@@ -41,14 +41,14 @@ func (v *value) Int() (value int64) {
 }
 
 func (v *value) Float() (value float64) {
-	if v.choice != nil{
-		switch v.choice.(type) {
+	if v.value != nil{
+		switch v.value.(type) {
 		case string:
-			value, _ = strconv.ParseFloat(v.choice.(string), 64);
+			value, _ = strconv.ParseFloat(v.value.(string), 64);
 		case float64:
-			value = v.choice.(float64)
+			value = v.value.(float64)
 		case int:
-			value = float64(v.choice.(int))
+			value = float64(v.value.(int))
 		default:
 			v.err = errors.New("conversion as uint failed")
 		}
@@ -59,15 +59,15 @@ func (v *value) Float() (value float64) {
 }
 
 func (v *value) Time() time.Duration {
-	if v.choice != nil{
+	if v.value != nil{
 		var cast int64
-		switch v.choice.(type) {
+		switch v.value.(type) {
 		case string:
-			cast, _ = strconv.ParseInt(v.choice.(string), 10, 64);
+			cast, _ = strconv.ParseInt(v.value.(string), 10, 64);
 		case float64:
-			cast = int64(v.choice.(float64))
+			cast = int64(v.value.(float64))
 		case int:
-			cast = int64(v.choice.(int))
+			cast = int64(v.value.(int))
 		default:
 			v.err = errors.New("conversion as time duration failed")
 		}
@@ -80,8 +80,8 @@ func (v *value) Time() time.Duration {
 }
 
 func (v *value) Bool() (value bool) {
-	if v.choice != nil{
-		switch v.choice.(type) {
+	if v.value != nil{
+		switch v.value.(type) {
 		case bool:
 			value, _ = strconv.ParseBool(v.answer)
 		default:
@@ -99,16 +99,16 @@ func (v *value) Bool() (value bool) {
 }
 
 func (v *value) String() (value string) {
-	if v.choice != nil{
-		switch v.choice.(type) {
+	if v.value != nil{
+		switch v.value.(type) {
 		case string:
-			value, _ = v.choice.(string);
+			value, _ = v.value.(string);
 		case int:
-			value = strconv.Itoa(v.choice.(int))
+			value = strconv.Itoa(v.value.(int))
 		case float64:
-			value = strconv.FormatFloat(v.choice.(float64), 'f', 2, 64)
+			value = strconv.FormatFloat(v.value.(float64), 'f', 2, 64)
 		case bool:
-			value = strconv.FormatBool(v.choice.(bool))
+			value = strconv.FormatBool(v.value.(bool))
 		default:
 			v.err = errors.New("conversion as string failed")
 		}
@@ -118,8 +118,8 @@ func (v *value) String() (value string) {
 }
 
 func (v *value) Raw() interface{}{
-	if v.choice != nil{
-		return v.choice
+	if v.value != nil{
+		return v.value
 	}
 	return v.answer
 }
