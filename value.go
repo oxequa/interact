@@ -81,9 +81,10 @@ func (v *value) Time() time.Duration {
 
 func (v *value) Bool() (value bool) {
 	if v.value != nil{
+		//fmt.Println(v.value)
 		switch v.value.(type) {
 		case bool:
-			value, _ = strconv.ParseBool(v.answer)
+			value = v.value.(bool)
 		default:
 			v.err = errors.New("conversion as bool failed")
 		}
