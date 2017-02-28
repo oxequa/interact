@@ -17,7 +17,7 @@ type (
 	}
 )
 
-type(
+type (
 	model interface {
 		father() model
 		append(prefix)
@@ -38,14 +38,14 @@ func (c *context) Parent() Context {
 }
 
 func (c *context) Answer() Value {
-	answ,_ := c.answer().(value)
+	answ, _ := c.answer().(value)
 	return &answ
 }
 
 func (c *context) Answers() (v []Value) {
 	answers, _ := c.answer().([]value)
-	for index := range answers{
-		v = append(v,&answers[index])
+	for index := range answers {
+		v = append(v, &answers[index])
 	}
 	return v
 }
@@ -56,12 +56,12 @@ func (c *context) Input() Value {
 }
 
 func (c *context) Prefix(w io.Writer, t interface{}) {
-	p := prefix{w,t}
+	p := prefix{w, t}
 	c.append(p)
 }
 
-func (c *context) method(f ErrorFunc) error{
-	if f != nil{
+func (c *context) method(f ErrorFunc) error {
+	if f != nil {
 		if err := f(c); err != nil {
 			return err
 		}

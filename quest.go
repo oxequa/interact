@@ -2,33 +2,38 @@ package interact
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
-	"errors"
-	"io"
 )
 
 // Question params
 type Quest struct {
 	Choices
-	Default	interface{}
-	parent             *Question
+	Default           Default
+	parent            *Question
 	Options, Err, Msg string
-	Resolve BoolFunc
+	Resolve           BoolFunc
+}
+
+type Default struct {
+	Value   interface{}
+	Preview bool
 }
 
 // Question entity
 type Question struct {
 	Quest
 	prefix
-	err                    error
-	choices                bool
-	response               string
-	value                 interface{}
-	parent                 model
-	Action                 InterfaceFunc
-	Subs []*Question
+	err           error
+	choices       bool
+	response      string
+	value         interface{}
+	parent        model
+	Action        InterfaceFunc
+	Subs          []*Question
 	After, Before ErrorFunc
 }
 
@@ -44,8 +49,8 @@ type Choices struct {
 	Color        func(...interface{}) string
 }
 
-func (q *Question) answer() interface{}{
-	return value{answer:q.response, value: q.value, err: q.err}
+func (q *Question) answer() interface{} {
+	return value{answer: q.response, value: q.value, err: q.err}
 }
 
 func (q *Question) append(p prefix) {
@@ -56,22 +61,22 @@ func (q *Question) father() model {
 	return q.parent
 }
 
-func (q *Question) writer() io.Writer{
+func (q *Question) writer() io.Writer {
 	return q.Writer
 }
 
-func (q *Question) lead() interface{}{
+func (q *Question) lead() interface{} {
 	return q.Text
 }
 
 func (q *Question) ask() (err error) {
 	context := &context{model: q}
-	if err := context.method(q.Before); err != nil{
+	if err := context.method(q.Before); err != nil {
 		return err
 	}
-	if q.lead() != nil{
+	if q.lead() != nil {
 		q.print(q.lead(), " ")
-	}else if q.parent != nil && q.parent.lead() != nil {
+	} else if q.parent != nil && q.parent.lead() != nil {
 		q.print(q.parent.lead(), " ")
 	}
 	if q.Msg != "" {
@@ -80,8 +85,8 @@ func (q *Question) ask() (err error) {
 	if q.Options != "" {
 		q.print(q.Options, " ")
 	}
-	if q.Default != nil {
-		q.print(q.Default, " ")
+	if q.Default.Preview && q.Default.Value != nil {
+		q.print(q.Default.Value, " ")
 	}
 	if q.Alternatives != nil && len(q.Alternatives) > 0 {
 		q.multiple()
@@ -91,13 +96,13 @@ func (q *Question) ask() (err error) {
 	}
 	if q.Subs != nil && len(q.Subs) > 0 {
 		if q.Resolve != nil {
-			if q.Resolve(context){
+			if q.Resolve(context) {
 				for _, s := range q.Subs {
 					s.parent = q
 					s.ask()
 				}
 			}
-		}else{
+		} else {
 			for _, s := range q.Subs {
 				s.parent = q.parent
 				s.ask()
@@ -110,7 +115,7 @@ func (q *Question) ask() (err error) {
 			return q.ask()
 		}
 	}
-	if err := context.method(q.After); err != nil{
+	if err := context.method(q.After); err != nil {
 		return err
 	}
 	return nil
@@ -127,10 +132,10 @@ func (q *Question) wait() error {
 	}
 	q.response = r[:len(r)-1]
 
-	if len(q.response) == 0 && q.Default != nil {
-		q.value = q.Default
+	if len(q.response) == 0 && q.Default.Value != nil {
+		q.value = q.Default.Value
 		return nil
-	}else if len(q.response) == 0{
+	} else if len(q.response) == 0 {
 		return errors.New("Answer invalid")
 	}
 
@@ -146,18 +151,18 @@ func (q *Question) wait() error {
 }
 
 func (q *Question) print(v ...interface{}) {
-	if q.parent.writer() != nil{
+	if q.writer() != nil {
 		fmt.Fprint(q.writer(), v...)
-	}else if q.parent != nil && q.parent.writer() != nil {
+	} else if q.parent != nil && q.parent.writer() != nil {
 		fmt.Fprint(q.parent.writer(), v...)
-	}else {
+	} else {
 		fmt.Print(v...)
 	}
 
 }
 
-func (q *Question) color(v ...interface{}) string{
-	if q.Color != nil{
+func (q *Question) color(v ...interface{}) string {
+	if q.Color != nil {
 		return q.Color(v...)
 	}
 	return fmt.Sprint(v...)
@@ -170,9 +175,9 @@ func (q *Question) loop(err error) error {
 	return q.ask()
 }
 
-func (q *Question) multiple() error{
-	for index,i := range q.Alternatives {
-		q.print("\n\t", q.color(index + 1, ") "), i.Text, " ")
+func (q *Question) multiple() error {
+	for index, i := range q.Alternatives {
+		q.print("\n\t", q.color(index+1, ") "), i.Text, " ")
 	}
 	q.choices = true
 	q.print("\n")

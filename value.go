@@ -1,9 +1,9 @@
 package interact
 
 import (
-	"time"
-	"strconv"
 	"errors"
+	"strconv"
+	"time"
 )
 
 type (
@@ -17,8 +17,8 @@ type (
 	}
 	value struct {
 		answer string
-		value interface{}
-		err error
+		value  interface{}
+		err    error
 	}
 )
 
@@ -26,7 +26,7 @@ func (v *value) Int() (value int64) {
 	if v.value != nil {
 		switch v.value.(type) {
 		case string:
-			value, _ = strconv.ParseInt(v.value.(string), 10, 64);
+			value, _ = strconv.ParseInt(v.value.(string), 10, 64)
 		case float64:
 			value = int64(v.value.(float64))
 		case int:
@@ -34,17 +34,17 @@ func (v *value) Int() (value int64) {
 		default:
 			v.err = errors.New("conversion as int failed")
 		}
-	}else {
+	} else {
 		value, _ = strconv.ParseInt(v.answer, 10, 64)
 	}
 	return value
 }
 
 func (v *value) Float() (value float64) {
-	if v.value != nil{
+	if v.value != nil {
 		switch v.value.(type) {
 		case string:
-			value, _ = strconv.ParseFloat(v.value.(string), 64);
+			value, _ = strconv.ParseFloat(v.value.(string), 64)
 		case float64:
 			value = v.value.(float64)
 		case int:
@@ -52,18 +52,18 @@ func (v *value) Float() (value float64) {
 		default:
 			v.err = errors.New("conversion as uint failed")
 		}
-	}else {
+	} else {
 		value, _ = strconv.ParseFloat(v.answer, 64)
 	}
 	return
 }
 
 func (v *value) Time() time.Duration {
-	if v.value != nil{
+	if v.value != nil {
 		var cast int64
 		switch v.value.(type) {
 		case string:
-			cast, _ = strconv.ParseInt(v.value.(string), 10, 64);
+			cast, _ = strconv.ParseInt(v.value.(string), 10, 64)
 		case float64:
 			cast = int64(v.value.(float64))
 		case int:
@@ -80,7 +80,7 @@ func (v *value) Time() time.Duration {
 }
 
 func (v *value) Bool() (value bool) {
-	if v.value != nil{
+	if v.value != nil {
 		//fmt.Println(v.value)
 		switch v.value.(type) {
 		case bool:
@@ -100,10 +100,10 @@ func (v *value) Bool() (value bool) {
 }
 
 func (v *value) String() (value string) {
-	if v.value != nil{
+	if v.value != nil {
 		switch v.value.(type) {
 		case string:
-			value, _ = v.value.(string);
+			value, _ = v.value.(string)
 		case int:
 			value = strconv.Itoa(v.value.(int))
 		case float64:
@@ -118,8 +118,8 @@ func (v *value) String() (value string) {
 	return v.answer
 }
 
-func (v *value) Raw() interface{}{
-	if v.value != nil{
+func (v *value) Raw() interface{} {
+	if v.value != nil {
 		return v.value
 	}
 	return v.answer

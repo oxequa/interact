@@ -39,7 +39,7 @@ func (i *Interact) father() model {
 
 func (i *Interact) ask() (err error) {
 	context := &context{model: i}
-	if err := context.method(i.Before); err != nil{
+	if err := context.method(i.Before); err != nil {
 		return err
 	}
 	for index := range i.Questions {
@@ -48,7 +48,7 @@ func (i *Interact) ask() (err error) {
 			return err
 		}
 	}
-	if err := context.method(i.After); err != nil{
+	if err := context.method(i.After); err != nil {
 		return err
 	}
 	return nil
@@ -57,15 +57,15 @@ func (i *Interact) ask() (err error) {
 func (i *Interact) answer() interface{} {
 	answers := []value{}
 	for _, q := range i.Questions {
-		answers = append(answers, value{answer:q.response, value: q.value, err: q.err})
+		answers = append(answers, value{answer: q.response, value: q.value, err: q.err})
 	}
 	return answers
 }
 
-func (i *Interact) writer() io.Writer{
+func (i *Interact) writer() io.Writer {
 	return i.Writer
 }
 
-func (i *Interact) lead() interface{}{
+func (i *Interact) lead() interface{} {
 	return i.Text
 }

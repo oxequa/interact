@@ -38,7 +38,6 @@ func main() {
     i.Run(&i.Question{
     		Quest: i.Quest{
     			Msg:      "Would you like some coffee?",
-    			Err:      "INVALID INPUT",
     		},
     		Action: func(c i.Context) interface{} {
     			fmt.Println(c.Input().Bool())
@@ -67,7 +66,6 @@ func main() {
 			{
 				Quest: i.Quest{
 					Msg:     "Would you like some coffee?",
-					Err:      "INVALID INPUT",
 				},
 				Action: func(c i.Context) interface{} {
 					fmt.Println(c.Answer().Bool())
@@ -77,7 +75,6 @@ func main() {
 			{
                 Quest: i.Quest{
                     Msg:     "What's 2+2?",
-                    Err:      "INVALID INPUT",
                 },
                 Action: func(c i.Context) interface{} {
                     // get the answer as integer
@@ -112,7 +109,6 @@ func main() {
 			{
 				Quest: i.Quest{
                     Msg:     "how much for a teacup?",
-                    Err:     "INVALID INPUT",
                     Choices: i.Choices{
                         Alternatives: []i.Choice{
                             {
@@ -156,7 +152,6 @@ func main() {
     i.Run(&i.Question{
         Quest: i.Quest{
             Msg:     "Would you like some coffee?",
-            Err:      "INVALID INPUT",
             Resolve: func(c i.Context) bool{
                 return c.Answer().Bool()
             },
@@ -165,7 +160,6 @@ func main() {
             {
                 Quest: i.Quest{
                     Msg:     "What Kind of Coffee?",
-                    Err:      "INVALID INPUT",
                     Choices: i.Choices{
                         Alternatives: []i.Choice{
                             {
@@ -187,7 +181,7 @@ func main() {
             },
         },
         Action: func(c i.Context) interface{} {
-            //fmt.Println(c.Answer().String())
+            fmt.Println(c.Answer().String())
             return nil
         },
     })
@@ -223,7 +217,6 @@ func main() {
 				},
 				Quest: i.Quest{
 					Msg:     "Would you like some coffee?",
-					Err:      "INVALID INPUT",
 				},
 				Action: func(c i.Context) interface{} {
 					return nil
@@ -232,7 +225,6 @@ func main() {
 			{
 				Quest: i.Quest{
 					Msg:     "What's 2+2?",
-					Err:      "INVALID INPUT",
 				},
 				Action: func(c i.Context) interface{} {
 					return nil
@@ -244,3 +236,26 @@ func main() {
 ```
 
 ##### Default values
+
+You can define a default value for each question and get it in the action func as an answer
+
+``` go
+package main
+
+import (
+	i "github.com/tockins/interact"
+)
+
+func main() {
+    i.Run(&i.Question{
+        Quest: i.Quest{
+            Msg:     "Would you like some coffee?",
+            Default: i.Default{Value:"test val",Preview:false},
+        },
+        Action: func(c i.Context) interface{} {
+            fmt.Println(c.Answer().String())
+            return nil
+        },
+    })
+}
+``` 
