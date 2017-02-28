@@ -10,7 +10,7 @@ An easy and fast Go library, without external imports, to handle questions and a
 - [Sub questions](#sub-questions)
 - [Question prefix](#question-prefix)
 - [Default values](#default-values)
-- Custom errors 
+- [Custom errors](#custom-errors)
 - After/Before listeners
 - Colors support (fatih/color)
 - Windows support
@@ -259,3 +259,32 @@ func main() {
     })
 }
 ``` 
+
+##### Custom errors
+
+You can define a default error for each questions, or you can return a custom error in specific cases
+
+
+``` go
+package main
+
+import (
+	i "github.com/tockins/interact"
+)
+
+func main() {
+
+	i.Run(&i.Question{
+		Quest: i.Quest{
+			Msg: "Would you like some coffee?",
+			Err: "Default error",
+		},
+		Action: func(c i.Context) interface{} {
+			if(c.Answer().Bool() == false){
+				return "Invalid answer"
+			}
+			return nil
+		},
+	})
+}
+```
