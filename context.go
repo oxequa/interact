@@ -9,7 +9,7 @@ type (
 		Parent() Context
 		Answer() Value
 		Answers() []Value
-		Input() Value
+		Default() Value
 		Prefix(io.Writer, interface{})
 	}
 	context struct {
@@ -50,7 +50,7 @@ func (c *context) Answers() (v []Value) {
 	return v
 }
 
-func (c *context) Input() Value {
+func (c *context) Default() Value {
 	answ := c.answer().(value)
 	return &answ
 }

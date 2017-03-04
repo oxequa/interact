@@ -11,9 +11,8 @@ An easy and fast Go library, without external imports, to handle questions and a
 - [Question prefix](#question-prefix)
 - [Default values](#default-values)
 - [Custom errors](#custom-errors)
-- After/Before listeners
+- [After/Before listeners](#after-before)
 - Colors support (fatih/color)
-- Windows support
 - Run Single/Sequence/One by one 
 
 ##### Installation
@@ -262,7 +261,7 @@ func main() {
 
 ##### Custom errors
 
-You can define a default error for each questions, or you can return a custom error in specific cases
+You can define a default error for every question, or you can return a custom error in specific cases
 
 
 ``` go
@@ -287,4 +286,56 @@ func main() {
 		},
 	})
 }
+```
+
+##### After Before
+
+For every question and for each list of questions you can define custom commands to be run before or after the relative instance
+
+
+``` go
+package main
+
+import (
+	i "github.com/tockins/interact"
+)
+
+i.Run(&i.Interact{
+    Before: func(c i.Context) error{
+        c.Prefix(nil, "TEST")
+        return nil
+    },
+    Questions: []*i.Question{
+        {
+            Before: func(c i.Context) error{
+                c.Prefix(nil, "TEST A")
+                return nil
+            },
+            Quest: i.Quest{
+                Msg:     "How much coffee?",
+            },
+            Action: func(c i.Context) interface{} {
+                return nil
+            },
+            After: func(c i.Context) error{
+                fmt.Println(c.Answer().Int())
+                return nil
+            },
+        },
+        {
+            Quest: i.Quest{
+                Msg:     "How much coffee?",
+            },
+            Action: func(c i.Context) interface{} {
+                return nil
+            },
+        },
+    },
+    After: func(c i.Context) error{
+        for _, v := range c.Answers(){
+            fmt.Println(v.Raw())
+        }
+        return nil
+    },
+})
 ```
