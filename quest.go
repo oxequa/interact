@@ -22,7 +22,7 @@ type Quest struct {
 // Default answer value
 type Default struct {
 	Value   interface{}
-	Text interface{}
+	Text    interface{}
 	Preview bool
 }
 
@@ -107,10 +107,10 @@ func (q *Question) ask() (err error) {
 			if err := context.method(q.After); err != nil {
 				return err
 			}
-		}else{
+		} else {
 			context.i.skip = false
 		}
-	}else{
+	} else {
 		context.i.skip = false
 	}
 	return nil

@@ -23,7 +23,7 @@ type (
 
 // Interact element
 type Interact struct {
-	skip bool
+	skip          bool
 	Prefix        Prefix
 	Default       Default
 	Questions     []*Question

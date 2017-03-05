@@ -8,7 +8,7 @@ type (
 	Context interface {
 		Skip()
 		SetPrfx(io.Writer, interface{})
-		SetDef(interface{}, interface{},bool)
+		SetDef(interface{}, interface{}, bool)
 		SetErr(string)
 		Ans() Cast
 		Def() Cast
