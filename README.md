@@ -6,7 +6,7 @@ An easy and fast Go library, without external imports, to handle questions and a
 
 - [Single question](#single-question)
 - [Questions list](#questions-list)
-- [Multiple choices](#multiple-choice)
+- [Multiple choice](#multiple-choice)
 - [Sub questions](#sub-questions)
 - [Question prefix](#question-prefix)
 - [Default values](#default-values)
