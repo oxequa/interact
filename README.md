@@ -12,8 +12,8 @@ An easy and fast Go library, without external imports, to handle questions and a
 - [Default values](#default-values)
 - [Custom errors](#custom-errors)
 - [After/Before listeners](#after-before)
-- Colors support (fatih/color)
-- Run Single/Sequence/One by one 
+- [Skip a Question](#skip-a-question)
+- [Colors support (fatih/color)](#color-support)
 
 ##### Installation
 
@@ -34,15 +34,19 @@ import (
 )
 
 func main() {
-    i.Run(&i.Question{
-    		Quest: i.Quest{
-    			Msg:      "Would you like some coffee?",
-    		},
-    		Action: func(c i.Context) interface{} {
-    			fmt.Println(c.Input().Bool())
-    			return nil
-    		}
-    	})
+	i.Run(&i.Interact{
+		Questions: []*i.Question{
+			{
+				Quest: i.Quest{
+					Msg:      "Would you like some coffee?",
+				},
+				Action: func(c i.Context) interface{} {
+					fmt.Println(c.Ans().Bool())
+					return nil
+				},
+			},
+		},
+	})
 }
 ``` 
 
@@ -67,25 +71,25 @@ func main() {
 					Msg:     "Would you like some coffee?",
 				},
 				Action: func(c i.Context) interface{} {
-					fmt.Println(c.Answer().Bool())
+					fmt.Println(c.Ans().Bool())
 					return nil
 				},
 			},
 			{
-                Quest: i.Quest{
-                    Msg:     "What's 2+2?",
-                },
-                Action: func(c i.Context) interface{} {
-                    // get the answer as integer
-                    if c.Answer().Int() < 4 {
-                        // return a custom error and rerun the question
-                        return "INCREASE"
-                    }else if c.Answer().Int() > 4 {
-                        return "DECREASE"
-                    }
-                    return nil
-                },
-            },
+				Quest: i.Quest{
+					Msg:     "What's 2+2?",
+				},
+				Action: func(c i.Context) interface{} {
+					// get the answer as integer
+					if c.Ans().Int() < 4 {
+						// return a custom error and rerun the question
+						return "INCREASE"
+					}else if c.Ans().Int() > 4 {
+						return "DECREASE"
+					}
+					return nil
+				},
+			},
 		},
 	})
 }
@@ -126,7 +130,7 @@ func main() {
                     },
                 },
                 Action: func(c i.Context) interface{} {
-                    fmt.Println(c.Answer().Int())
+                    fmt.Println(c.Ans().Int())
                     return nil
                 },
 			},
@@ -148,40 +152,49 @@ import (
 )
 
 func main() {
-    i.Run(&i.Question{
-        Quest: i.Quest{
-            Msg:     "Would you like some coffee?",
-            Resolve: func(c i.Context) bool{
-                return c.Answer().Bool()
-            },
-        },
-        Subs: []*i.Question{
+    i.Run(&i.Interact{
+        Questions: []*i.Question{
             {
                 Quest: i.Quest{
-                    Msg:     "What Kind of Coffee?",
-                    Choices: i.Choices{
-                        Alternatives: []i.Choice{
-                            {
-                                Text: "Black coffee",
-                                Response: "black",
+                    Msg:     "Would you like some coffee?",
+                    Resolve: func(c i.Context) bool {
+                        return c.Ans().Bool()
+                    },
+                },
+                Subs: []*i.Question{
+                    {
+                        Quest: i.Quest{
+                            Msg:     "What Kind of Coffee?",
+                            Choices: i.Choices{
+                                Alternatives: []i.Choice{
+                                    {
+                                        Text: "Black coffee",
+                                        Response: "black",
+                                    },
+                                    {
+                                        Text: "With milk",
+                                        Response: "milk",
+                                    },
+                                },
                             },
-                            {
-                                Text: "With milk",
-                                Response: "milk",
-                            },
+                        },
+                        Action: func(c i.Context) interface{} {
+                            // question (sub) answer
+                            fmt.Println(c.Ans().String())
+                            // parent answer
+                            fmt.Println(c.Parent().Ans().String())
+                            return nil
                         },
                     },
                 },
                 Action: func(c i.Context) interface{} {
-                    fmt.Println(c.Answer().String())
-                    fmt.Println(c.Parent().Answer().String())
+                    // question answer
+                    fmt.Println(c.Ans().String())
+                    // sub question answer
+                    fmt.Println(c.Qns().Get(0).Ans().Raw())
                     return nil
                 },
             },
-        },
-        Action: func(c i.Context) interface{} {
-            fmt.Println(c.Answer().String())
-            return nil
         },
     })
 }
@@ -193,7 +206,7 @@ Interact support a custom prefix for each question
 
 You can define a **global prefix** for all questions but you can **overwrite it** in each question with ease
 
-With the first param you can pass a custom **io.writer** instance
+As the first param you can pass a custom **io.writer** instance
 
 ``` go
 package main
@@ -203,34 +216,40 @@ import (
 )
 
 func main() {
-	i.Run(&i.Interact{
-		Before: func(c i.Context) error{
-			c.Prefix(nil,"GLOBAL PREFIX")
-			return nil
-		},
-		Questions: []*i.Question{
-			{
-				Before: func(c i.Context) error{
-					c.Prefix(nil,"OVERWRITTEN PREFIX")
-					return nil
-				},
-				Quest: i.Quest{
-					Msg:     "Would you like some coffee?",
-				},
-				Action: func(c i.Context) interface{} {
-					return nil
-				},
-			},
-			{
-				Quest: i.Quest{
-					Msg:     "What's 2+2?",
-				},
-				Action: func(c i.Context) interface{} {
-					return nil
-				},
-			},
-		},
-	})
+    i.Run(&i.Interact{
+        Before: func(c i.Context) error{
+            c.SetPrfx(nil,"GLOBAL PREFIX")
+            return nil
+        },
+        Questions: []*i.Question{
+            {
+                Before: func(c i.Context) error{
+                    c.SetPrfx(nil,"OVERWRITTEN PREFIX")
+                    // print current prefix
+                    fmt.Println(c.Prfx())
+                    return nil
+                },
+                Quest: i.Quest{
+                    Msg:     "Would you like some coffee?",
+                },
+                Action: func(c i.Context) interface{} {
+                    return nil
+                },
+            },
+            {
+                Before: func(c i.Context) error{
+                    fmt.Println(c.Prfx())
+                    return nil
+                },
+                Quest: i.Quest{
+                    Msg:     "What's 2+2?",
+                },
+                Action: func(c i.Context) interface{} {
+                    return nil
+                },
+            },
+        },
+    })
 }
 ```
 
@@ -246,14 +265,31 @@ import (
 )
 
 func main() {
-    i.Run(&i.Question{
-        Quest: i.Quest{
-            Msg:     "Would you like some coffee?",
-            Default: i.Default{Value:"test val",Preview:false},
-        },
-        Action: func(c i.Context) interface{} {
-            fmt.Println(c.Answer().String())
-            return nil
+    i.Run(&i.Interact{
+        Questions: []*i.Question{
+            {
+                Quest: i.Quest{
+                    Msg:     "Would you like some coffee?",
+                    Default: i.Default{Value:"test val",Preview:false},
+                },
+                Action: func(c i.Context) interface{} {
+                    fmt.Println(c.Ans().String())
+                    return nil
+                },
+            },
+            {
+                Before: func(c i.Context) error{
+                    c.SetDef("default val", true)
+                    return nil
+                },
+                Quest: i.Quest{
+                    Msg:     "Would you like some coffee?",
+                },
+                Action: func(c i.Context) interface{} {
+                    fmt.Println(c.Ans().String())
+                    return nil
+                },
+            },
         },
     })
 }
@@ -261,7 +297,7 @@ func main() {
 
 ##### Custom errors
 
-You can define a default error for every question, or you can return a custom error in specific cases
+You can define a default error for every question or you can set a default error message
 
 
 ``` go
@@ -273,16 +309,35 @@ import (
 
 func main() {
 
-	i.Run(&i.Question{
-		Quest: i.Quest{
-			Msg: "Would you like some coffee?",
-			Err: "Default error",
-		},
-		Action: func(c i.Context) interface{} {
-			if(c.Answer().Bool() == false){
-				return "Invalid answer"
-			}
+	i.Run(&i.Interact{
+		Before: func(c i.Context) error{
+			c.SetErr("Default error")
 			return nil
+		},
+		Questions: []*i.Question{
+			{
+				Quest: i.Quest{
+					Msg: "Would you like some coffee?",
+					Err: "Custom error fot this question",
+				},
+				Action: func(c i.Context) interface{} {
+					if(c.Ans().Bool() == false){
+						return "Invalid answer"
+					}
+					return nil
+				},
+			},
+			{
+				Quest: i.Quest{
+					Msg: "Would you like some coffee?",
+				},
+				Action: func(c i.Context) interface{} {
+					if(c.Ans().Bool() == false){
+						return "Invalid answer"
+					}
+					return nil
+				},
+			},
 		},
 	})
 }
@@ -300,42 +355,184 @@ import (
 	i "github.com/tockins/interact"
 )
 
-i.Run(&i.Interact{
-    Before: func(c i.Context) error{
-        c.Prefix(nil, "TEST")
-        return nil
-    },
-    Questions: []*i.Question{
-        {
-            Before: func(c i.Context) error{
-                c.Prefix(nil, "TEST A")
-                return nil
+function main(){
+    i.Run(&i.Interact{
+        Before: func(c i.Context) error{
+            c.SetPrfx(nil, "TEST")
+            return nil
+        },
+        Questions: []*i.Question{
+            {
+                Before: func(c i.Context) error{
+                    c.SetPrfx(nil, "TEST A")
+                    return nil
+                },
+                Quest: i.Quest{
+                    Msg:     "How much coffee?",
+                },
+                Action: func(c i.Context) interface{} {
+                    if c.Ans().Int() != 0{
+                        return nil
+                    }
+                    return "Int required"
+                },
+                After: func(c i.Context) error{
+                    fmt.Println(c.Ans().Int())
+                    return nil
+                },
             },
-            Quest: i.Quest{
-                Msg:     "How much coffee?",
-            },
-            Action: func(c i.Context) interface{} {
-                return nil
-            },
-            After: func(c i.Context) error{
-                fmt.Println(c.Answer().Int())
-                return nil
+            {
+                Quest: i.Quest{
+                    Msg:     "How much coffee?",
+                },
+                Action: func(c i.Context) interface{} {
+                    return nil
+                },
             },
         },
-        {
-            Quest: i.Quest{
-                Msg:     "How much coffee?",
+        After: func(c i.Context) error{
+            for _, v := range c.Qns().List(){
+                fmt.Println(v.Quest(),v.Ans().Raw())
+            }
+            return nil
+        },
+    })
+}
+```
+
+##### Skip a Question
+
+With the skip func you can stop the execution of the current question or you can skip the next.
+
+``` go
+package main
+
+import (
+	i "github.com/tockins/interact"
+)
+
+function main(){
+    i.Run(&i.Interact{
+        Before: func(c i.Context) error{
+            // skip all questions
+            //c.Skip()
+            return nil
+        },
+        Questions: []*i.Question{
+            {
+                Before: func(c i.Context) error{
+                    // skip the current question
+                    //c.Skip()
+                    return nil
+                },
+                Quest: i.Quest{
+                    Msg:     "How much coffee?",
+                },
+                Action: func(c i.Context) interface{} {
+                    return nil
+                },
+                After: func(c i.Context) error{
+                    // skip the next question
+                    c.Skip()
+                    return nil
+                },
             },
-            Action: func(c i.Context) interface{} {
-                return nil
+            {
+                Before: func(c i.Context) error{
+                    return nil
+                },
+                Quest: i.Quest{
+                    Msg:     "How much tea?",
+                },
+                Action: func(c i.Context) interface{} {
+                    return nil
+                },
+                After: func(c i.Context) error{
+                    return nil
+                },
             },
         },
-    },
-    After: func(c i.Context) error{
-        for _, v := range c.Answers(){
-            fmt.Println(v.Raw())
-        }
-        return nil
-    },
-})
+    })
+}
+```
+
+##### Color support
+
+Interact supports the color scheme defined by the package "fatih/color"
+
+``` go
+package main
+
+import (
+	"github.com/fatih/color"
+	i "github.com/tockins/interact"
+	"fmt"
+)
+
+func main() {
+
+	b := color.New(color.FgHiWhite).Add(color.BgRed).SprintfFunc()
+	y := color.New(color.FgYellow).SprintFunc()
+	r := color.New(color.FgRed).SprintFunc()
+	g := color.New(color.FgGreen).SprintFunc()
+	prefix := y("[") + "INTERACT" + y("]")
+
+	i.Run(&i.Interact{
+		Before: func(c i.Context) error{
+			c.SetPrfx(color.Output, prefix)
+			return nil
+		},
+		Questions: []*i.Question{
+			{
+				Before: func(c i.Context) error{
+					c.SetPrfx(nil,y("[") + "INTERACT QUEST" + y("]"))
+					return nil
+				},
+				Quest: i.Quest{
+					Msg:     "Would you like some coffee?",
+					Options:  g("[yes/no]"),
+					Err:      b("INVALID"),
+					Default:  i.Default{Text: y("(yes)"), Preview: true, Value:true},
+					Resolve: func(c i.Context) bool{
+						return c.Ans().Bool()
+					},
+				},
+				Subs: []*i.Question{
+					{
+						Quest: i.Quest{
+							Msg:     "What Kind of Coffee?",
+							Err:      b("INVALID"),
+							Default:  i.Default{Text: y("(black)"), Value: "black", Preview: true},
+							Choices: i.Choices{
+								Color: g,
+								Alternatives: []i.Choice{
+									{
+										Text: "Black coffee",
+										Response: "black",
+									},
+									{
+										Text: "With milk",
+										Response: "milk",
+									},
+								},
+							},
+						},
+						Action: func(c i.Context) interface{}{
+							fmt.Println(c.Ans().String())
+							fmt.Println(c.Parent().Ans().Bool())
+							return nil
+						},
+					},
+				},
+				Action: func(c i.Context) interface{} {
+					if !c.Ans().Bool(){
+						return r("INVALID INPUT")
+					}
+					fmt.Println(c.Quest(), c.Ans().Bool())
+					return nil
+				},
+			},
+		},
+	})
+}
 ```
