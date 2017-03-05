@@ -4,68 +4,66 @@ import (
 	"io"
 )
 
-type interact interface {
-	ask() error
-}
+type (
+	Interview interface {
+		//Next()
+		//Prev()
+		//Goto(interface{})
+	}
+	interview struct {
+		index    int
+		interact *Interact
+		current  current
+	}
+	current struct {
+		list  []*Question
+		index int
+	}
+)
 
 // Interact element
 type Interact struct {
-	prefix
+	skip bool
+	Prefix        Prefix
+	Default       Default
 	Questions     []*Question
+	Err           interface{}
 	After, Before ErrorFunc
 }
 
 // Questions prefix
-type prefix struct {
+type Prefix struct {
 	Writer io.Writer
 	Text   interface{}
 }
 
 // Run a questions list
-func Run(i interact) error {
+func Run(i *Interact) error {
 	if err := i.ask(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (i *Interact) append(p prefix) {
-	i.prefix = p
-}
-
-func (i *Interact) father() model {
-	return i
+func New(i *Interact) Interview {
+	return &interview{interact: i, current: current{index: 0, list: i.Questions}}
 }
 
 func (i *Interact) ask() (err error) {
-	context := &context{model: i}
+	context := &context{i: i}
 	if err := context.method(i.Before); err != nil {
 		return err
 	}
-	for index := range i.Questions {
-		i.Questions[index].parent = i
-		if err = i.Questions[index].ask(); err != nil {
+	if !context.i.skip {
+		for index := range i.Questions {
+			i.Questions[index].interact = i
+			if err = i.Questions[index].ask(); err != nil {
+				return err
+			}
+		}
+		if err := context.method(i.After); err != nil {
 			return err
 		}
 	}
-	if err := context.method(i.After); err != nil {
-		return err
-	}
 	return nil
-}
-
-func (i *Interact) answer() interface{} {
-	answers := []value{}
-	for _, q := range i.Questions {
-		answers = append(answers, value{answer: q.response, value: q.value, err: q.err})
-	}
-	return answers
-}
-
-func (i *Interact) writer() io.Writer {
-	return i.Writer
-}
-
-func (i *Interact) lead() interface{} {
-	return i.Text
 }

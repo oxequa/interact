@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"strconv"
 )
@@ -13,25 +12,29 @@ import (
 type Quest struct {
 	Choices
 	Default           Default
+	Prefix            Prefix
 	parent            *Question
-	Options, Err, Msg string
+	Options, Msg, Tag string
+	Err               interface{}
 	Resolve           BoolFunc
 }
 
+// Default answer value
 type Default struct {
 	Value   interface{}
+	Text interface{}
 	Preview bool
 }
 
 // Question entity
 type Question struct {
 	Quest
-	prefix
 	err           error
 	choices       bool
 	response      string
 	value         interface{}
-	parent        model
+	interact      *Interact
+	parent        *Question
 	Action        InterfaceFunc
 	Subs          []*Question
 	After, Before ErrorFunc
@@ -49,74 +52,66 @@ type Choices struct {
 	Color        func(...interface{}) string
 }
 
-func (q *Question) answer() interface{} {
-	return value{answer: q.response, value: q.value, err: q.err}
-}
-
-func (q *Question) append(p prefix) {
-	q.prefix = p
-}
-
-func (q *Question) father() model {
-	return q.parent
-}
-
-func (q *Question) writer() io.Writer {
-	return q.Writer
-}
-
-func (q *Question) lead() interface{} {
-	return q.Text
-}
-
 func (q *Question) ask() (err error) {
-	context := &context{model: q}
-	if err := context.method(q.Before); err != nil {
-		return err
-	}
-	if q.lead() != nil {
-		q.print(q.lead(), " ")
-	} else if q.parent != nil && q.parent.lead() != nil {
-		q.print(q.parent.lead(), " ")
-	}
-	if q.Msg != "" {
-		q.print(q.Msg, " ")
-	}
-	if q.Options != "" {
-		q.print(q.Options, " ")
-	}
-	if q.Default.Preview && q.Default.Value != nil {
-		q.print(q.Default.Value, " ")
-	}
-	if q.Alternatives != nil && len(q.Alternatives) > 0 {
-		q.multiple()
-	}
-	if err = q.wait(); err != nil {
-		return q.loop(err)
-	}
-	if q.Subs != nil && len(q.Subs) > 0 {
-		if q.Resolve != nil {
-			if q.Resolve(context) {
-				for _, s := range q.Subs {
-					s.parent = q
-					s.ask()
+	context := &context{i: q.interact, q: q}
+	if !context.i.skip {
+		if err := context.method(q.Before); err != nil {
+			return err
+		}
+		if !context.i.skip {
+			if q.Prefix.Text != nil {
+				q.print(q.Prefix.Text, " ")
+			} else if q.parent != nil && q.parent.Prefix.Text != nil {
+				q.print(q.parent.Prefix.Text, " ")
+			} else if q.interact.Prefix.Text != nil {
+				fmt.Print(q.interact.Prefix.Text, " ")
+			}
+			if q.Msg != "" {
+				q.print(q.Msg, " ")
+			}
+			if q.Options != "" {
+				q.print(q.Options, " ")
+			}
+			if q.Default.Preview && q.Default.Value != nil && q.Default.Text != nil {
+				q.print(q.Default.Text, " ")
+			}
+			if q.Alternatives != nil && len(q.Alternatives) > 0 {
+				q.multiple()
+			}
+			if err = q.wait(); err != nil {
+				return q.loop(err)
+			}
+			if q.Subs != nil && len(q.Subs) > 0 {
+				if q.Resolve != nil {
+					if q.Resolve(context) {
+						for _, s := range q.Subs {
+							s.interact = q.interact
+							s.parent = q
+							s.ask()
+						}
+					}
+				} else {
+					for _, s := range q.Subs {
+						s.interact = q.interact
+						s.parent = q.parent
+						s.ask()
+					}
 				}
 			}
-		} else {
-			for _, s := range q.Subs {
-				s.parent = q.parent
-				s.ask()
+			if q.Action != nil {
+				if err := q.Action(context); err != nil {
+					q.print(err, " ")
+					return q.ask()
+				}
 			}
+			if err := context.method(q.After); err != nil {
+				return err
+			}
+		}else{
+			context.i.skip = false
 		}
-	}
-	if q.Action != nil {
-		if err := q.Action(context); err != nil {
-			q.print(err, " ")
-			return q.ask()
-		}
-	}
-	if err := context.method(q.After); err != nil {
-		return err
+	}else{
+		context.i.skip = false
 	}
 	return nil
 }
@@ -151,10 +146,12 @@ func (q *Question) wait() error {
 }
 
 func (q *Question) print(v ...interface{}) {
-	if q.writer() != nil {
-		fmt.Fprint(q.writer(), v...)
-	} else if q.parent != nil && q.parent.writer() != nil {
-		fmt.Fprint(q.parent.writer(), v...)
+	if q.Prefix.Writer != nil {
+		fmt.Fprint(q.Prefix.Writer, v...)
+	} else if q.parent != nil && q.parent.Prefix.Writer != nil {
+		fmt.Fprint(q.parent.Prefix.Writer, v...)
+	} else if q.interact != nil && q.interact.Prefix.Writer != nil {
+		fmt.Fprint(q.interact.Prefix.Writer, v...)
 	} else {
 		fmt.Print(v...)
 	}
@@ -169,8 +166,10 @@ func (q *Question) color(v ...interface{}) string {
 }
 
 func (q *Question) loop(err error) error {
-	if q.Err != "" {
+	if q.Err != nil {
 		q.print(q.Err, " ")
+	} else if q.interact.Err != nil {
+		q.print(q.interact.Err, " ")
 	}
 	return q.ask()
 }
