@@ -456,7 +456,7 @@ function main(){
 }
 ```
 
-##### Color support
+##### Colors support
 
 Interact supports the color scheme defined by the package "fatih/color"
 
