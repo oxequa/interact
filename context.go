@@ -2,6 +2,7 @@ package interact
 
 import (
 	"io"
+	"errors"
 )
 
 type (
@@ -12,6 +13,7 @@ type (
 		SetErr(string)
 		Ans() Cast
 		Def() Cast
+		Err() error
 		Parent() Context
 		Prfx() Cast
 		Qns() Qns
@@ -46,6 +48,13 @@ func (c *context) Ans() Cast {
 
 func (c *context) Skip() {
 	c.i.skip = true
+}
+
+func (c *context) Err(){
+	if c.q != nil{
+		return errors.New(c.q.err.(string))
+	}
+	return errors.New(c.i.Err.(string))
 }
 
 func (c *context) Def() Cast {
