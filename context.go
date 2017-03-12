@@ -1,16 +1,17 @@
 package interact
 
 import (
-	"io"
 	"errors"
+	"io"
 )
 
 type (
 	Context interface {
 		Skip()
+		Reload()
 		SetPrfx(io.Writer, interface{})
 		SetDef(interface{}, interface{}, bool)
-		SetErr(string)
+		SetErr(interface{})
 		Ans() Cast
 		Def() Cast
 		Err() error
@@ -50,11 +51,19 @@ func (c *context) Skip() {
 	c.i.skip = true
 }
 
-func (c *context) Err(){
-	if c.q != nil{
-		return errors.New(c.q.err.(string))
+func (c *context) Reload() {
+	if c.q != nil {
+		c.q.reload = true
 	}
-	return errors.New(c.i.Err.(string))
+}
+
+func (c *context) Err() error {
+	if c.q.Err != nil {
+		return errors.New(c.q.Err.(string))
+	} else if c.i.Err != nil {
+		return errors.New(c.i.Err.(string))
+	}
+	return nil
 }
 
 func (c *context) Def() Cast {
@@ -117,7 +126,7 @@ func (c *context) SetDef(v interface{}, t interface{}, p bool) {
 	return
 }
 
-func (c *context) SetErr(e string) {
+func (c *context) SetErr(e interface{}) {
 	if c.q != nil {
 		c.q.Err = e
 		return

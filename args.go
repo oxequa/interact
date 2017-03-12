@@ -8,11 +8,11 @@ import (
 
 type (
 	Cast interface {
-		Int() int64
-		Bool() bool
-		String() string
-		Float() float64
-		Time() time.Duration
+		Int() (int64, error)
+		Bool() (bool, error)
+		String() (string, error)
+		Float() (float64, error)
+		Time() (time.Duration, error)
 		Raw() interface{}
 	}
 	cast struct {
@@ -37,30 +37,30 @@ type (
 )
 
 // Cast the answer as an int
-func (c *cast) Int() (value int64) {
+func (c *cast) Int() (value int64, err error) {
 	if c.value != nil {
 		switch c.value.(type) {
 		case string:
-			value, _ = strconv.ParseInt(c.value.(string), 10, 64)
+			value, err = strconv.ParseInt(c.value.(string), 10, 64)
 		case float64:
 			value = int64(c.value.(float64))
 		case int:
 			value = int64(c.value.(int))
 		default:
-			c.err = errors.New("conversion as int failed")
+			err = errors.New("conversion as int failed")
 		}
 	} else {
-		value, _ = strconv.ParseInt(c.answer, 10, 64)
+		value, err = strconv.ParseInt(c.answer, 10, 64)
 	}
-	return value
+	return value, err
 }
 
 // Cast the answer as a float
-func (c *cast) Float() (value float64) {
+func (c *cast) Float() (value float64, err error) {
 	if c.value != nil {
 		switch c.value.(type) {
 		case string:
-			value, _ = strconv.ParseFloat(c.value.(string), 64)
+			value, err = strconv.ParseFloat(c.value.(string), 64)
 		case float64:
 			value = c.value.(float64)
 		case int:
@@ -69,60 +69,59 @@ func (c *cast) Float() (value float64) {
 			c.err = errors.New("conversion as uint failed")
 		}
 	} else {
-		value, _ = strconv.ParseFloat(c.answer, 64)
+		value, err = strconv.ParseFloat(c.answer, 64)
 	}
-	return
+	return value, err
 }
 
 // Cast the answer as a time duration
-func (c *cast) Time() time.Duration {
+func (c *cast) Time() (t time.Duration, err error) {
 	if c.value != nil {
 		var cast int64
 		switch c.value.(type) {
 		case string:
-			cast, _ = strconv.ParseInt(c.value.(string), 10, 64)
+			cast, err = strconv.ParseInt(c.value.(string), 10, 64)
 		case float64:
 			cast = int64(c.value.(float64))
 		case int:
 			cast = int64(c.value.(int))
 		default:
-			c.err = errors.New("conversion as time duration failed")
+			err = errors.New("conversion as time duration failed")
 		}
-		return time.Duration(int64(cast))
+		return time.Duration(int64(cast)), err
 	}
 	if value, err := strconv.ParseUint(c.answer, 10, 64); err == nil {
-		return time.Duration(value)
+		return time.Duration(value), err
 	}
-	return time.Duration(0)
+	return time.Duration(0), err
 }
 
 // Cast the answer as a bool
-func (c *cast) Bool() (value bool) {
+func (c *cast) Bool() (value bool, err error) {
 	if c.value != nil {
-		//fmt.Println(c.value)
 		switch c.value.(type) {
 		case bool:
 			value = c.value.(bool)
 		default:
-			c.err = errors.New("conversion as bool failed")
+			err = errors.New("conversion as bool failed")
 		}
-		return
+		return value, err
 	}
 	if c.answer == "y" || c.answer == "yes" {
-		return true
+		return true, nil
 	} else if c.answer == "n" || c.answer == "no" {
-		return false
+		return false, nil
 	}
-	value, _ = strconv.ParseBool(c.answer)
-	return
+	value, err = strconv.ParseBool(c.answer)
+	return value, err
 }
 
 // Cast the answer as a string
-func (c *cast) String() (value string) {
+func (c *cast) String() (value string, err error) {
 	if c.value != nil {
 		switch c.value.(type) {
 		case string:
-			value, _ = c.value.(string)
+			value = c.value.(string)
 		case int:
 			value = strconv.Itoa(c.value.(int))
 		case float64:
@@ -130,11 +129,11 @@ func (c *cast) String() (value string) {
 		case bool:
 			value = strconv.FormatBool(c.value.(bool))
 		default:
-			c.err = errors.New("conversion as string failed")
+			err = errors.New("conversion as string failed")
 		}
-		return
+		return value, err
 	}
-	return c.answer
+	return c.answer, err
 }
 
 // Raw return the answer as an interface

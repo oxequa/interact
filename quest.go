@@ -30,6 +30,7 @@ type Default struct {
 type Question struct {
 	Quest
 	err           error
+	reload        bool
 	choices       bool
 	response      string
 	value         interface{}
@@ -103,6 +104,10 @@ func (q *Question) ask() (err error) {
 					q.print(err, " ")
 					return q.ask()
 				}
+			}
+			if q.reload {
+				q.reload = false
+				return q.ask()
 			}
 			if err := context.method(q.After); err != nil {
 				return err
