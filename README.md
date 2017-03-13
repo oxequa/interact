@@ -475,7 +475,7 @@ function main(){
 
 ##### Reload a Question
 
-With the skip func you can stop the execution of the current question or you can skip the next.
+You can reload a question how many times as you want
 
 ``` go
 package main
