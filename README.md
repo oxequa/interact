@@ -13,6 +13,7 @@ An easy and fast Go library, without external imports, to handle questions and a
 - [Custom errors](#custom-errors)
 - [After/Before listeners](#after-before)
 - [Skip a Question](#skip-a-question)
+- [Reload a Question](#reload-a-question)
 - [Colors support (fatih/color)](#color-support)
 
 ##### Installation
@@ -41,7 +42,11 @@ func main() {
 					Msg:      "Would you like some coffee?",
 				},
 				Action: func(c i.Context) interface{} {
-					fmt.Println(c.Ans().Bool())
+					val, err := c.Ans().Bool()
+					if err != nil{
+					    return err
+					}
+					fmt.Println(val)
 					return nil
 				},
 			},
@@ -71,7 +76,11 @@ func main() {
 					Msg:     "Would you like some coffee?",
 				},
 				Action: func(c i.Context) interface{} {
-					fmt.Println(c.Ans().Bool())
+					val, err := c.Ans().Bool()
+					if err != nil{
+					    return err
+					}
+					fmt.Println(val)
 					return nil
 				},
 			},
@@ -80,11 +89,12 @@ func main() {
 					Msg:     "What's 2+2?",
 				},
 				Action: func(c i.Context) interface{} {
+				    val, _ := c.Ans().Int()
 					// get the answer as integer
-					if c.Ans().Int() < 4 {
+					if val < 4 {
 						// return a custom error and rerun the question
 						return "INCREASE"
-					}else if c.Ans().Int() > 4 {
+					}else if val > 4 {
 						return "DECREASE"
 					}
 					return nil
@@ -130,7 +140,8 @@ func main() {
                     },
                 },
                 Action: func(c i.Context) interface{} {
-                    fmt.Println(c.Ans().Int())
+                    val, _ := c.Ans().Int()
+                    fmt.Println(val)
                     return nil
                 },
 			},
@@ -157,8 +168,9 @@ func main() {
             {
                 Quest: i.Quest{
                     Msg:     "Would you like some coffee?",
-                    Resolve: func(c i.Context) bool {
-                        return c.Ans().Bool()
+                    Resolve: func(c i.Context) bool {     
+                        val, _ := c.Ans().Int()
+                        return val
                     },
                 },
                 Subs: []*i.Question{
@@ -180,16 +192,19 @@ func main() {
                         },
                         Action: func(c i.Context) interface{} {
                             // question (sub) answer
-                            fmt.Println(c.Ans().String())
+                            val, _ := c.Ans().String()
+                            fmt.Println(val)
                             // parent answer
-                            fmt.Println(c.Parent().Ans().String())
+                            val, _ := c.Parent().Ans().String()
+                            fmt.Println(val)
                             return nil
                         },
                     },
                 },
                 Action: func(c i.Context) interface{} {
-                    // question answer
-                    fmt.Println(c.Ans().String())
+                    // question answer   
+                    val, _ := c.Ans().String()
+                    fmt.Println(val)
                     // sub question answer
                     fmt.Println(c.Qns().Get(0).Ans().Raw())
                     return nil
@@ -273,7 +288,8 @@ func main() {
                     Default: i.Default{Value:"test val",Preview:false},
                 },
                 Action: func(c i.Context) interface{} {
-                    fmt.Println(c.Ans().String())
+                    val, _ := c.Ans().String()
+                    fmt.Println(val)
                     return nil
                 },
             },
@@ -286,7 +302,8 @@ func main() {
                     Msg:     "Would you like some coffee?",
                 },
                 Action: func(c i.Context) interface{} {
-                    fmt.Println(c.Ans().String())
+                    val, _ := c.Ans().Bool()
+                    fmt.Println(val)
                     return nil
                 },
             },
@@ -321,7 +338,8 @@ func main() {
 					Err: "Custom error fot this question",
 				},
 				Action: func(c i.Context) interface{} {
-					if(c.Ans().Bool() == false){
+                    val, err := c.Ans().Bool()
+					if err {
 						return "Invalid answer"
 					}
 					return nil
@@ -332,10 +350,11 @@ func main() {
 					Msg: "Would you like some coffee?",
 				},
 				Action: func(c i.Context) interface{} {
-					if(c.Ans().Bool() == false){
-						return "Invalid answer"
-					}
-					return nil
+					val, err := c.Ans().Bool()
+                    if err {
+                        return c.Err()
+                    }
+                    return nil
 				},
 			},
 		},
@@ -371,13 +390,11 @@ function main(){
                     Msg:     "How much coffee?",
                 },
                 Action: func(c i.Context) interface{} {
-                    if c.Ans().Int() != 0{
-                        return nil
-                    }
-                    return "Int required"
+                    return nil
                 },
                 After: func(c i.Context) error{
-                    fmt.Println(c.Ans().Int())
+                    val, _ := c.Ans().Int()
+                    fmt.Println(val)
                     return nil
                 },
             },
@@ -456,6 +473,37 @@ function main(){
 }
 ```
 
+##### Reload a Question
+
+With the skip func you can stop the execution of the current question or you can skip the next.
+
+``` go
+package main
+
+import (
+	i "github.com/tockins/interact"
+)
+
+function main(){
+    i.Run(&i.Interact{
+        Questions: []*i.Question{
+            {
+                Quest: i.Quest{
+                    Msg:     "Would you like Interact?",
+                },
+                Action: func(c i.Context) interface{}{
+                    val, err := c.Ans().Bool()
+                    if (err != nil || !val){
+                        c.Reload()
+                    }
+                    return nil
+                },
+            },
+        },
+    })
+}
+```
+
 ##### Colors support
 
 Interact supports the color scheme defined by the package "fatih/color"
@@ -494,7 +542,8 @@ func main() {
 					Err:      b("INVALID"),
 					Default:  i.Default{Text: y("(yes)"), Preview: true, Value:true},
 					Resolve: func(c i.Context) bool{
-						return c.Ans().Bool()
+						val, _ := c.Ans().Bool()
+						return val
 					},
 				},
 				Subs: []*i.Question{
@@ -518,17 +567,20 @@ func main() {
 							},
 						},
 						Action: func(c i.Context) interface{}{
-							fmt.Println(c.Ans().String())
-							fmt.Println(c.Parent().Ans().Bool())
+						    val, _ := c.Ans().String()
+							fmt.Println(val)
+							val, _ := c.Parent().Ans().String()
+							fmt.Println(val)
 							return nil
 						},
 					},
 				},
 				Action: func(c i.Context) interface{} {
-					if !c.Ans().Bool(){
+				    val, _ := c.Ans().Bool()
+					if !val{
 						return r("INVALID INPUT")
 					}
-					fmt.Println(c.Quest(), c.Ans().Bool())
+					fmt.Println(c.Quest(), val)
 					return nil
 				},
 			},
