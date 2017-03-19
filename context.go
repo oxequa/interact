@@ -10,7 +10,7 @@ type (
 		Skip()
 		Reload()
 		SetPrfx(io.Writer, interface{})
-		SetDef(interface{}, interface{}, bool)
+		SetDef(interface{}, interface{})
 		SetErr(interface{})
 		SetEnd(string)
 		Ans() Cast
@@ -121,7 +121,7 @@ func (c *context) SetPrfx(w io.Writer, t interface{}) {
 	return
 }
 
-func (c *context) SetDef(v interface{}, t interface{}, p bool) {
+func (c *context) SetDef(v interface{}, t interface{}) {
 	if c.q != nil {
 		c.q.def = def{v, t}
 		return
