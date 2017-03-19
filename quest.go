@@ -109,6 +109,7 @@ func (q *Question) ask() (err error) {
 			}
 			if q.reload.status {
 				q.reload.status = false
+				q.value = nil
 				return q.ask()
 			}
 			if err := context.method(q.After); err != nil {
@@ -133,7 +134,6 @@ func (q *Question) wait() error {
 		return err
 	}
 	q.response = r[:len(r)-1]
-
 	if abort := q.abort(q.response); abort.value != "" {
 		abort.status = true
 		return nil
