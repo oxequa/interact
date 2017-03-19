@@ -23,16 +23,35 @@ type (
 
 // Interact element
 type Interact struct {
-	skip          bool
-	Prefix        Prefix
-	Default       Default
+	settings
 	Questions     []*Question
-	Err           interface{}
 	After, Before ErrorFunc
 }
 
+// general settings and options
+type settings struct {
+	skip bool
+	err  interface{}
+	prefix
+	def
+	end
+}
+
+// answer end
+type end struct {
+	status bool
+	value  string
+}
+
+// Default answer value
+type def struct {
+	Value   interface{}
+	Text    interface{}
+	Preview bool
+}
+
 // Questions prefix
-type Prefix struct {
+type prefix struct {
 	Writer io.Writer
 	Text   interface{}
 }

@@ -12,6 +12,7 @@ type (
 		SetPrfx(io.Writer, interface{})
 		SetDef(interface{}, interface{}, bool)
 		SetErr(interface{})
+		SetEnd(string)
 		Ans() Cast
 		Def() Cast
 		Err() error
@@ -42,12 +43,15 @@ func (c *context) Parent() Context {
 
 func (c *context) Ans() Cast {
 	if c.q != nil {
-		return &cast{answer: c.q.response, value: c.q.value, err: c.q.err}
+		return &cast{answer: c.q.response, value: c.q.value}
 	}
 	return &cast{}
 }
 
 func (c *context) Skip() {
+	if c.q != nil {
+		c.q.skip = true
+	}
 	c.i.skip = true
 }
 
@@ -58,26 +62,26 @@ func (c *context) Reload() {
 }
 
 func (c *context) Err() error {
-	if c.q.Err != nil {
-		return errors.New(c.q.Err.(string))
-	} else if c.i.Err != nil {
-		return errors.New(c.i.Err.(string))
+	if c.q.err != nil {
+		return errors.New(c.q.err.(string))
+	} else if c.i.err != nil {
+		return errors.New(c.i.err.(string))
 	}
 	return nil
 }
 
 func (c *context) Def() Cast {
 	if c.q != nil {
-		return &cast{value: c.q.Default.Value}
+		return &cast{value: c.q.def.Value}
 	}
-	return &cast{value: c.i.Default.Value}
+	return &cast{value: c.i.def.Value}
 }
 
 func (c *context) Prfx() Cast {
-	if c.q != nil && c.q.Prefix.Text != nil {
-		return &cast{value: c.q.Prefix.Text}
+	if c.q != nil && c.q.prefix.Text != nil {
+		return &cast{value: c.q.prefix.Text}
 	}
-	return &cast{value: c.i.Prefix.Text}
+	return &cast{value: c.i.prefix.Text}
 }
 
 func (c *context) Qns() Qns {
@@ -110,28 +114,37 @@ func (c *context) Quest() string {
 
 func (c *context) SetPrfx(w io.Writer, t interface{}) {
 	if c.q != nil {
-		c.q.Prefix = Prefix{w, t}
+		c.q.prefix = prefix{w, t}
 		return
 	}
-	c.i.Prefix = Prefix{w, t}
+	c.i.prefix = prefix{w, t}
 	return
 }
 
 func (c *context) SetDef(v interface{}, t interface{}, p bool) {
 	if c.q != nil {
-		c.q.Default = Default{v, t, p}
+		c.q.def = def{v, t, p}
 		return
 	}
-	c.i.Default = Default{v, t, p}
+	c.i.def = def{v, t, p}
 	return
 }
 
 func (c *context) SetErr(e interface{}) {
 	if c.q != nil {
-		c.q.Err = e
+		c.q.err = e
 		return
 	}
-	c.i.Err = e
+	c.i.err = e
+	return
+}
+
+func (c *context) SetEnd(e string) {
+	if c.q != nil {
+		c.q.end.value = e
+		return
+	}
+	c.i.end.value = e
 	return
 }
 
