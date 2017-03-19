@@ -14,6 +14,7 @@ An easy and fast Go library, without external imports, to handle questions and a
 - [After/Before listeners](#after-before)
 - [Skip a Question](#skip-a-question)
 - [Reload a Question](#reload-a-question)
+- [End signal](#end-signal)
 - [Colors support (fatih/color)](#color-support)
 
 ##### Installation
@@ -169,7 +170,7 @@ func main() {
                 Quest: i.Quest{
                     Msg:     "Would you like some coffee?",
                     Resolve: func(c i.Context) bool {     
-                        val, _ := c.Ans().Int()
+                        val, _ := c.Ans().Bool()
                         return val
                     },
                 },
@@ -195,7 +196,7 @@ func main() {
                             val, _ := c.Ans().String()
                             fmt.Println(val)
                             // parent answer
-                            val, _ := c.Parent().Ans().String()
+                            val, _ = c.Parent().Ans().String()
                             fmt.Println(val)
                             return nil
                         },
@@ -501,6 +502,71 @@ function main(){
             },
         },
     })
+}
+```
+
+##### End signal
+
+End a group of questions or sub-questions with a specific character or string
+
+```
+package main
+
+import (
+	i "github.com/tockins/interact"
+)
+
+func main() {
+	i.Run(&i.Interact{
+		Before: func(c i.Context) error {
+			c.SetEnd("!*")
+			return nil
+		},
+		Questions: []*i.Question{
+			{
+				Before: func(c i.Context) error {
+					c.SetEnd("*")
+					return nil
+				},
+				Quest: i.Quest{
+					Msg: "Would you like some coffee? (insert '*' to stop this question or the sub questions)",
+					Resolve: func(c i.Context) bool {
+						val, _ := c.Ans().Bool()
+						return val
+					},
+				},
+				Subs: []*i.Question{
+					{
+						Before: func(c i.Context) error {
+							c.SetEnd("!")
+							return nil
+						},
+						Quest: i.Quest{
+							Msg: "What kind of Coffee? (insert '!' to stop)",
+						},
+						Action: func(c i.Context) interface{} {
+							c.Reload()
+							return nil
+						},
+					},
+					{
+						Quest: i.Quest{
+							Msg: "What type of Coffee?",
+						},
+					},
+				},
+			},
+			{
+				Quest: i.Quest{
+					Msg: "Would you like some tea?",
+				},
+				Action: func(c i.Context) interface{} {
+					c.Reload()
+					return nil
+				},
+			},
+		},
+	})
 }
 ```
 
