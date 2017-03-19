@@ -284,9 +284,12 @@ func main() {
     i.Run(&i.Interact{
         Questions: []*i.Question{
             {
+                Before: func(c i.Context) error{
+                    c.SetDef("test",default val")
+                    return nil
+                },
                 Quest: i.Quest{
                     Msg:     "Would you like some coffee?",
-                    Default: i.Default{Value:"test val",Preview:false},
                 },
                 Action: func(c i.Context) interface{} {
                     val, _ := c.Ans().String()
@@ -296,7 +299,7 @@ func main() {
             },
             {
                 Before: func(c i.Context) error{
-                    c.SetDef("default val", true)
+                    c.SetDef("default","default val")
                     return nil
                 },
                 Quest: i.Quest{
@@ -606,7 +609,6 @@ func main() {
 					Msg:     "Would you like some coffee?",
 					Options:  g("[yes/no]"),
 					Err:      b("INVALID"),
-					Default:  i.Default{Text: y("(yes)"), Preview: true, Value:true},
 					Resolve: func(c i.Context) bool{
 						val, _ := c.Ans().Bool()
 						return val
@@ -617,7 +619,6 @@ func main() {
 						Quest: i.Quest{
 							Msg:     "What Kind of Coffee?",
 							Err:      b("INVALID"),
-							Default:  i.Default{Text: y("(black)"), Value: "black", Preview: true},
 							Choices: i.Choices{
 								Color: g,
 								Alternatives: []i.Choice{

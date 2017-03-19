@@ -47,7 +47,6 @@ type end struct {
 type def struct {
 	Value   interface{}
 	Text    interface{}
-	Preview bool
 }
 
 // Questions prefix

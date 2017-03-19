@@ -123,10 +123,10 @@ func (c *context) SetPrfx(w io.Writer, t interface{}) {
 
 func (c *context) SetDef(v interface{}, t interface{}, p bool) {
 	if c.q != nil {
-		c.q.def = def{v, t, p}
+		c.q.def = def{v, t}
 		return
 	}
-	c.i.def = def{v, t, p}
+	c.i.def = def{v, t}
 	return
 }
 

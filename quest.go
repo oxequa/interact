@@ -66,7 +66,7 @@ func (q *Question) ask() (err error) {
 			if q.Options != "" {
 				q.print(q.Options, " ")
 			}
-			if q.def.Preview && q.def.Value != nil && q.def.Text != nil {
+			if q.def.Value != nil && q.def.Text != nil {
 				q.print(q.def.Text, " ")
 			}
 			if q.Alternatives != nil && len(q.Alternatives) > 0 {
