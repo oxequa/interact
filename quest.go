@@ -20,7 +20,7 @@ type Quest struct {
 type Question struct {
 	Quest
 	settings
-	reload        bool
+	reload
 	choices       bool
 	response      string
 	value         interface{}
@@ -29,6 +29,12 @@ type Question struct {
 	Action        InterfaceFunc
 	Subs          []*Question
 	After, Before ErrorFunc
+}
+
+// Reload entity
+type reload struct {
+	status bool
+	loop   int
 }
 
 // Choice option
@@ -101,8 +107,8 @@ func (q *Question) ask() (err error) {
 					return q.ask()
 				}
 			}
-			if q.reload {
-				q.reload = false
+			if q.reload.status {
+				q.reload.status = false
 				return q.ask()
 			}
 			if err := context.method(q.After); err != nil {

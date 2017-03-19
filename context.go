@@ -9,6 +9,7 @@ type (
 	Context interface {
 		Skip()
 		Reload()
+		GetReload() int
 		SetPrfx(io.Writer, interface{})
 		SetDef(interface{}, interface{})
 		SetErr(interface{})
@@ -57,7 +58,8 @@ func (c *context) Skip() {
 
 func (c *context) Reload() {
 	if c.q != nil {
-		c.q.reload = true
+		c.q.reload.status = true
+		c.q.reload.loop++
 	}
 }
 
@@ -110,6 +112,13 @@ func (c *context) Quest() string {
 		return c.q.Quest.Msg
 	}
 	return ""
+}
+
+func (c *context) GetReload() int {
+	if c.q != nil {
+		return c.q.reload.loop
+	}
+	return 0
 }
 
 func (c *context) SetPrfx(w io.Writer, t interface{}) {

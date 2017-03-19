@@ -28,7 +28,7 @@ type Interact struct {
 	After, Before ErrorFunc
 }
 
-// general settings and options
+// General settings and options
 type settings struct {
 	skip bool
 	err  interface{}
@@ -37,7 +37,7 @@ type settings struct {
 	end
 }
 
-// answer end
+// Answer end
 type end struct {
 	status bool
 	value  string
@@ -45,8 +45,8 @@ type end struct {
 
 // Default answer value
 type def struct {
-	Value   interface{}
-	Text    interface{}
+	Value interface{}
+	Text  interface{}
 }
 
 // Questions prefix
@@ -63,10 +63,12 @@ func Run(i *Interact) error {
 	return nil
 }
 
+// Create a new interact configuration
 func New(i *Interact) Interview {
 	return &interview{interact: i, current: current{index: 0, list: i.Questions}}
 }
 
+// Ask one by one with interact after/before
 func (i *Interact) ask() (err error) {
 	context := &context{i: i}
 	if err := context.method(i.Before); err != nil {
