@@ -121,6 +121,7 @@ func (q *Question) ask() (err error) {
 	} else {
 		context.i.skip = false
 	}
+	q.value = nil
 	return nil
 }
 

@@ -44,7 +44,8 @@ func (c *context) Parent() Context {
 
 func (c *context) Ans() Cast {
 	if c.q != nil {
-		return &cast{answer: c.q.response, value: c.q.value}
+		cast := &cast{answer: c.q.response, value: c.q.value}
+		return cast
 	}
 	return &cast{}
 }
