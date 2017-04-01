@@ -158,11 +158,11 @@ func (q *Question) wait() error {
 
 func (q *Question) print(v ...interface{}) {
 	if q.prefix.Writer != nil {
-		fmt.Fprint(q.prefix.Writer, v...)
+		fmt.Fprintln(q.prefix.Writer, v...)
 	} else if q.parent != nil && q.parent.prefix.Writer != nil {
-		fmt.Fprint(q.parent.prefix.Writer, v...)
+		fmt.Fprintln(q.parent.prefix.Writer, v...)
 	} else if q.interact != nil && q.interact.prefix.Writer != nil {
-		fmt.Fprint(q.interact.prefix.Writer, v...)
+		fmt.Fprintln(q.interact.prefix.Writer, v...)
 	} else {
 		fmt.Print(v...)
 	}
