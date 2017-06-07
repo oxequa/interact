@@ -148,7 +148,7 @@ func (q *Question) wait() error {
 	// multiple choice
 	if q.choices {
 		choice, err := strconv.ParseInt(q.response, 10, 64)
-		if err != nil || int(choice) > len(q.Alternatives) {
+		if err != nil || int(choice) > len(q.Alternatives) || int(choice) < 1 {
 			return errors.New("out of range")
 		}
 		q.value = q.Alternatives[choice-1].Response
