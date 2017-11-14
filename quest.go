@@ -130,7 +130,7 @@ func (q *Question) wait() error {
 	if q.choices {
 		q.print(q.color("?"), " ", "Answer", " ")
 	}
-	r, err := reader.ReadLine()
+	r, _, err := reader.ReadLine()
 	if err != nil {
 		return err
 	}
