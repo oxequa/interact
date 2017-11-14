@@ -130,11 +130,11 @@ func (q *Question) wait() error {
 	if q.choices {
 		q.print(q.color("?"), " ", "Answer", " ")
 	}
-	r, err := reader.ReadString('\n')
+	r, err := reader.ReadLine()
 	if err != nil {
 		return err
 	}
-	q.response = r[:len(r)-1]
+	q.response = string(r)
 	if abort := q.abort(q.response); abort.value != "" {
 		abort.status = true
 		return nil
